@@ -21,6 +21,10 @@
 # Main Script
 # --------------
 
+# shellcheck disable=SC1091
+# shellcheck source=exclude-architectures.sh
+. "${SOURCE_ROOT}/../scripts/exclude-architectures.sh"
+
 UNIVERSAL_BUILD_FOLDER=../build/
 
 # make the output directory and delete the framework directory
@@ -31,16 +35,33 @@ rm -rf "${UNIVERSAL_BUILD_FOLDER}/${PROJECT_NAME}.framework"
 TARGET=${TARGET_NAME%-Universal}
 
 # Step 1. Build Device and Simulator versions
-xcodebuild -target "${TARGET}" ONLY_ACTIVE_ARCH=NO -configuration "${CONFIGURATION}" -sdk iphoneos BUILD_DIR="${BUILD_DIR}" BUILD_ROOT="${BUILD_ROOT}"
-xcodebuild -target "${TARGET}" ONLY_ACTIVE_ARCH=NO -configuration "${CONFIGURATION}" -sdk iphonesimulator BUILD_DIR="${BUILD_DIR}" BUILD_ROOT="${BUILD_ROOT}"
+xcodebuild -target "${TARGET}" \
+  ONLY_ACTIVE_ARCH=NO \
+  -configuration "${CONFIGURATION}" \
+  -sdk iphoneos \
+  BUILD_DIR="${BUILD_DIR}" \
+  BUILD_ROOT="${BUILD_ROOT}" \
+  BUILD_LIBRARY_FOR_DISTRIBUTION=YES
+
+xcodebuild -target "${TARGET}" \
+  ONLY_ACTIVE_ARCH=NO \
+  -configuration "${CONFIGURATION}" \
+  -sdk iphonesimulator \
+  BUILD_DIR="${BUILD_DIR}" \
+  BUILD_ROOT="${BUILD_ROOT}" \
+  BUILD_LIBRARY_FOR_DISTRIBUTION=YES
 
 # Step 2. Copy the framework structure to the universal folder
 cp -R "${BUILD_DIR}/${CONFIGURATION}-iphoneos/${PROJECT_NAME}.framework" "${UNIVERSAL_BUILD_FOLDER}/"
 
-# Step 3. Create universal binary file using lipo and place the combined executable in the copied framework directory
+# Step 3. Copy the swiftmodule files created during the simulator build
+rsync -a "${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/${PROJECT_NAME}.framework/Modules/${PROJECT_NAME}.swiftmodule/" \
+  "${UNIVERSAL_BUILD_FOLDER}/${PROJECT_NAME}.framework/Modules/${PROJECT_NAME}.swiftmodule" || true
+
+# Step 4. Create universal binary file using lipo and place the combined executable in the copied framework directory
 lipo -create -output "${UNIVERSAL_BUILD_FOLDER}/${PROJECT_NAME}.framework/${PROJECT_NAME}" "${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/${PROJECT_NAME}.framework/${PROJECT_NAME}" "${BUILD_DIR}/${CONFIGURATION}-iphoneos/${PROJECT_NAME}.framework/${PROJECT_NAME}"
 
-# Step 4. Copy strings bundle if exists
+# Step 5. Copy strings bundle if exists
 STRINGS_INPUT_FOLDER="${PROJECT_NAME}Strings.bundle"
 if [ -d "${STRINGS_INPUT_FOLDER}" ]; then
   STRINGS_OUTPUT_FOLDER="${UNIVERSAL_BUILD_FOLDER}/${PROJECT_NAME}Strings.bundle"

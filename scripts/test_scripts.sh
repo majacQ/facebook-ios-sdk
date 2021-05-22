@@ -72,20 +72,16 @@ test_main_setup() {
     "FBSDKCoreKit"
     "FBSDKLoginKit"
     "FBSDKShareKit"
-    "FBSDKPlacesKit"
     "FBSDKMarketingKit"
     "FBSDKTVOSKit"
-    "AccountKit"
   )
 
   local test_pod_specs=(
     "FBSDKCoreKit.podspec"
     "FBSDKLoginKit.podspec"
     "FBSDKShareKit.podspec"
-    "FBSDKPlacesKit.podspec"
     "FBSDKMarketingKit.podspec"
     "FBSDKTVOSKit.podspec"
-    "AccountKit/AccountKit.podspec"
     "FacebookSDK.podspec"
   )
 
@@ -93,14 +89,12 @@ test_main_setup() {
     "FBSDKCoreKit.podspec"
     "FBSDKLoginKit.podspec"
     "FBSDKShareKit.podspec"
-    "FBSDKPlacesKit.podspec"
     "FBSDKTVOSKit.podspec"
   )
 
   local test_version_change_files=(
     "Configurations/Version.xcconfig"
     "FBSDKCoreKit/FBSDKCoreKit/FBSDKCoreKit.h"
-    "AccountKit/AccountKit/Internal/AKFConstants.m"
   )
 
   local test_graph_api_version_change_files=(

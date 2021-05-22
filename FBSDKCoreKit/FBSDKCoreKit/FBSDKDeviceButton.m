@@ -16,11 +16,15 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#import "FBSDKDeviceButton.h"
+#import "TargetConditionals.h"
 
-#import <UIKit/UIKit.h>
+#if TARGET_OS_TV
 
-#import "FBSDKCoreKit+Internal.h"
+ #import "FBSDKDeviceButton.h"
+
+ #import <UIKit/UIKit.h>
+
+ #import "FBSDKCoreKit+Internal.h"
 
 static const CGFloat kFBLogoSize = 54.0;
 static const CGFloat kFBLogoLeftMargin = 36.0;
@@ -29,7 +33,7 @@ static const CGFloat kPreferredPaddingBetweenLogoTitle = 44.0;
 
 @implementation FBSDKDeviceButton
 
-#pragma mark - Layout
+ #pragma mark - Layout
 
 - (void)didUpdateFocusInContext:(UIFocusUpdateContext *)context withAnimationCoordinator:(UIFocusAnimationCoordinator *)coordinator
 {
@@ -37,14 +41,14 @@ static const CGFloat kPreferredPaddingBetweenLogoTitle = 44.0;
 
   if (self == context.nextFocusedView) {
     [coordinator addCoordinatedAnimations:^{
-      self.transform = CGAffineTransformMakeScale(1.05, 1.05);
-      self.layer.shadowOpacity = 0.5;
-    } completion:NULL];
+                   self.transform = CGAffineTransformMakeScale(1.05, 1.05);
+                   self.layer.shadowOpacity = 0.5;
+                 } completion:NULL];
   } else if (self == context.previouslyFocusedView) {
     [coordinator addCoordinatedAnimations:^{
-      self.transform = CGAffineTransformMakeScale(1.0, 1.0);
-      self.layer.shadowOpacity = 0;
-    } completion:NULL];
+                   self.transform = CGAffineTransformMakeScale(1.0, 1.0);
+                   self.layer.shadowOpacity = 0;
+                 } completion:NULL];
   }
 }
 
@@ -66,11 +70,11 @@ static const CGFloat kPreferredPaddingBetweenLogoTitle = 44.0;
 
   if (!self.layer.needsLayout) {
     CGSize titleSize = [FBSDKMath ceilForSize:[self.titleLabel.attributedText boundingRectWithSize:contentRect.size
-                                                                                           options:(NSStringDrawingUsesDeviceMetrics |
-                                                                                                    NSStringDrawingUsesLineFragmentOrigin |
-                                                                                                    NSStringDrawingUsesFontLeading)
+                                                                                           options:(NSStringDrawingUsesDeviceMetrics
+                                                                                             | NSStringDrawingUsesLineFragmentOrigin
+                                                                                             | NSStringDrawingUsesFontLeading)
                                                                                            context:NULL].size];
-    CGFloat titlePadding = ( CGRectGetWidth(rect) - titleSize.width ) / 2;
+    CGFloat titlePadding = (CGRectGetWidth(rect) - titleSize.width) / 2;
     if (titlePadding > titleX) {
       // if there's room to re-center the text, do so.
       rect = CGRectMake(kRightMargin, 0, CGRectGetWidth(contentRect) - kRightMargin - kRightMargin, CGRectGetHeight(contentRect));
@@ -80,7 +84,7 @@ static const CGFloat kPreferredPaddingBetweenLogoTitle = 44.0;
   return rect;
 }
 
-#pragma mark - FBSDKButton
+ #pragma mark - FBSDKButton
 
 - (UIFont *)defaultFont
 {
@@ -90,14 +94,16 @@ static const CGFloat kPreferredPaddingBetweenLogoTitle = 44.0;
 - (CGSize)sizeThatFits:(CGSize)size attributedTitle:(NSAttributedString *)title
 {
   CGSize titleSize = [FBSDKMath ceilForSize:[title boundingRectWithSize:size
-                                                                options:(NSStringDrawingUsesDeviceMetrics |
-                                                                         NSStringDrawingUsesLineFragmentOrigin |
-                                                                         NSStringDrawingUsesFontLeading)
+                                                                options:(NSStringDrawingUsesDeviceMetrics
+                                                                  | NSStringDrawingUsesLineFragmentOrigin
+                                                                  | NSStringDrawingUsesFontLeading)
                                                                 context:NULL].size];
   CGFloat logoAndTitleWidth = kFBLogoSize + kPreferredPaddingBetweenLogoTitle + titleSize.width + kPreferredPaddingBetweenLogoTitle;
   CGFloat height = 108;
-  CGSize contentSize = CGSizeMake(kFBLogoLeftMargin + logoAndTitleWidth + kRightMargin,
-                                  height);
+  CGSize contentSize = CGSizeMake(
+    kFBLogoLeftMargin + logoAndTitleWidth + kRightMargin,
+    height
+  );
   return contentSize;
 }
 
@@ -106,7 +112,7 @@ static const CGFloat kPreferredPaddingBetweenLogoTitle = 44.0;
   return [self sizeThatFits:size attributedTitle:[self attributedTitleStringFromString:title]];
 }
 
-#pragma mark - Subclasses
+ #pragma mark - Subclasses
 
 - (NSAttributedString *)attributedTitleStringFromString:(NSString *)string
 {
@@ -119,10 +125,10 @@ static const CGFloat kPreferredPaddingBetweenLogoTitle = 44.0;
   NSMutableAttributedString *attributedString =
   [[NSMutableAttributedString alloc] initWithString:string
                                          attributes:@{
-                                                      NSParagraphStyleAttributeName: style,
-                                                      NSFontAttributeName: [self defaultFont],
-                                                      NSForegroundColorAttributeName: [UIColor whiteColor]
-                                                      }];
+     NSParagraphStyleAttributeName : style,
+     NSFontAttributeName : [self defaultFont],
+     NSForegroundColorAttributeName : [UIColor whiteColor]
+   }];
   // Now find all the spaces and widen their kerning.
   NSRange range = NSMakeRange(0, string.length);
   while (range.location != NSNotFound) {
@@ -139,3 +145,5 @@ static const CGFloat kPreferredPaddingBetweenLogoTitle = 44.0;
 }
 
 @end
+
+#endif

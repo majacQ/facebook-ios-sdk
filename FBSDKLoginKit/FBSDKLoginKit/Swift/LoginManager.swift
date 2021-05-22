@@ -16,18 +16,21 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import Foundation
+import FBSDKCoreKit
+
 import UIKit
 
 /// Login Result Block
+@available(tvOS, unavailable)
 public typealias LoginResultBlock = (LoginResult) -> Void
 
 /**
  Describes the result of a login attempt.
  */
+@available(tvOS, unavailable)
 public enum LoginResult {
   /// User succesfully logged in. Contains granted, declined permissions and access token.
-  case success(granted: Set<Permission>, declined: Set<Permission>, token: AccessToken)
+  case success(granted: Set<Permission>, declined: Set<Permission>, token: FBSDKCoreKit.AccessToken)
   /// Login attempt was cancelled by the user.
   case cancelled
   /// Login attempt failed.
@@ -61,16 +64,15 @@ public enum LoginResult {
  If you are managing your own token instances outside of `AccessToken.current`, you will need to set
  `current` before calling `logIn()` to authorize further permissions on your tokens.
  */
+@available(tvOS, unavailable)
 public extension LoginManager {
   /**
    Initialize an instance of `LoginManager.`
 
-   - parameter loginBehavior: Optional login behavior to use. Default: `.Native`.
    - parameter defaultAudience: Optional default audience to use. Default: `.Friends`.
    */
-  convenience init(loginBehavior: LoginBehavior = .browser, defaultAudience: DefaultAudience = .friends) {
+  convenience init(defaultAudience: DefaultAudience = .friends) {
     self.init()
-    self.loginBehavior = loginBehavior
     self.defaultAudience = defaultAudience
   }
 

@@ -16,10 +16,18 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#import <FBSDKCoreKit/FBSDKDeviceViewControllerBase.h>
+#import "TargetConditionals.h"
 
-#import "FBSDKCoreKit+Internal.h"
-#import "FBSDKDeviceDialogView.h"
+#if TARGET_OS_TV
+
+ #if SWIFT_PACKAGE
+  #import "FBSDKDeviceViewControllerBase.h"
+ #else
+  #import <FBSDKCoreKit/FBSDKDeviceViewControllerBase.h>
+ #endif
+
+ #import "FBSDKCoreKit+Internal.h"
+ #import "FBSDKDeviceDialogView.h"
 
 @class FBSDKDeviceDialogView;
 
@@ -30,14 +38,16 @@ NS_ASSUME_NONNULL_BEGIN
 
  This is an internal API that should not be used directly and is subject to change.
 */
-@interface FBSDKDeviceViewControllerBase()<
-UIViewControllerAnimatedTransitioning,
-UIViewControllerTransitioningDelegate,
-FBSDKDeviceDialogViewDelegate
+@interface FBSDKDeviceViewControllerBase () <
+  UIViewControllerAnimatedTransitioning,
+  UIViewControllerTransitioningDelegate,
+  FBSDKDeviceDialogViewDelegate
 >
 
-@property (nonatomic, strong, readonly) FBSDKDeviceDialogView *deviceDialogView;
+@property (nonatomic, readonly, strong) FBSDKDeviceDialogView *deviceDialogView;
 
 @end
 
 NS_ASSUME_NONNULL_END
+
+#endif

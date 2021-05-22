@@ -19,29 +19,32 @@
 /**
  ShareDialog.Mode CustomStringConvertible
  */
+@available(tvOS, unavailable)
 extension ShareDialog.Mode: CustomStringConvertible {
   /// The string description
   public var description: String {
-    return __NSStringFromFBSDKShareDialogMode(self)
+    __NSStringFromFBSDKShareDialogMode(self)
   }
 }
 
 /**
  AppGroupPrivacy CustomStringConvertible
  */
+@available(tvOS, unavailable)
 extension AppGroupPrivacy: CustomStringConvertible {
   /// The string description
   public var description: String {
-    return __NSStringFromFBSDKAppGroupPrivacy(self)
+    __NSStringFromFBSDKAppGroupPrivacy(self)
   }
 }
 
 /**
  LikeObjectType CustomStringConvertible
  */
+@available(tvOS, unavailable)
 extension LikeObjectType: CustomStringConvertible {
   /// The string description
   public var description: String {
-    return __NSStringFromFBSDKLikeObjectType(self)
+    __NSStringFromFBSDKLikeObjectType(self)
   }
 }

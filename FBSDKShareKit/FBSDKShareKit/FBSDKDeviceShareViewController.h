@@ -16,13 +16,13 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+#import "TargetConditionals.h"
+
+#if TARGET_OS_TV
+
 #import <UIKit/UIKit.h>
 
-#ifdef BUCK
-#import <FBSDKCoreKit/FBSDKCoreKit.h>
-#else
-@import FBSDKCoreKit;
-#endif
+#import "FBSDKCoreKitImport.h"
 
 #import "FBSDKSharingContent.h"
 
@@ -33,6 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
   A delegate for `FBSDKDeviceShareViewController`
  */
+DEVICE_SHARING_DEPRECATED
 NS_SWIFT_NAME(DeviceShareViewControllerDelegate)
 @protocol FBSDKDeviceShareViewControllerDelegate <NSObject>
 
@@ -64,17 +65,17 @@ NS_SWIFT_NAME(DeviceShareViewControllerDelegate)
                     animated:YES
                   completion:NULL];
  */
+DEVICE_SHARING_DEPRECATED
 NS_SWIFT_NAME(FBDeviceShareViewController)
 @interface FBSDKDeviceShareViewController : FBSDKDeviceViewControllerBase
 
 /**
   Initializes a new instance with share content.
- @param shareContent The share content. Only `FBSDKShareLinkContent` and `FBSDKShareOpenGraphContent` are supported.
+ @param shareContent The share content. Only `FBSDKShareLinkContent` is supported.
 
  Invalid content types will result in notifying the delegate with an error when the view controller is presented.
 
  For `FBSDKShareLinkContent`, only contentURL is used (e.g., <FBSDKSharingContent> properties are not supported)
- For `FBSDKShareOpenGraphContent`, only the action is used (e.g., <FBSDKSharingContent> properties are not supported).
  */
 - (instancetype)initWithShareContent:(id<FBSDKSharingContent>)shareContent
 NS_SWIFT_NAME(init(content:))
@@ -99,3 +100,5 @@ NS_DESIGNATED_INITIALIZER;
 @end
 
 NS_ASSUME_NONNULL_END
+
+#endif

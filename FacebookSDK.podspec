@@ -3,7 +3,7 @@
 Pod::Spec.new do |s|
 
   s.name         = 'FacebookSDK'
-  s.version      = '5.11.1'
+  s.version      = '8.2.0'
   s.summary      = 'Official Facebook SDK for iOS to access Facebook Platform'
 
   s.description  = <<-DESC
@@ -18,44 +18,34 @@ Pod::Spec.new do |s|
   s.author       = 'Facebook'
 
   s.platform     = :ios, :tvos
-  s.ios.deployment_target = '8.0'
+  s.ios.deployment_target = '9.0'
   s.tvos.deployment_target = '10.0'
 
   s.source       = { :git => 'https://github.com/facebook/facebook-ios-sdk.git',
                      :tag => "v#{s.version}" }
 
-  s.ios.weak_frameworks = 'Accounts', 'CoreLocation', 'Social', 'Security', 'QuartzCore', 'CoreGraphics', 'UIKit', 'Foundation', 'AudioToolbox', 'WebKit'
-  s.tvos.weak_frameworks = 'CoreLocation', 'Security', 'QuartzCore', 'CoreGraphics', 'UIKit', 'Foundation', 'AudioToolbox'
+  s.ios.weak_frameworks = 'Accounts', 'Social', 'Security', 'QuartzCore', 'CoreGraphics', 'UIKit', 'Foundation', 'AudioToolbox', 'WebKit'
+  s.tvos.weak_frameworks = 'Security', 'QuartzCore', 'CoreGraphics', 'UIKit', 'Foundation', 'AudioToolbox'
 
   s.requires_arc = true
 
-  s.default_subspecs = 'CoreKit', 'MarketingKit'
+  s.default_subspecs = 'CoreKit'
 
   s.subspec 'CoreKit' do |ss|
-    ss.dependency 'FBSDKCoreKit', "~> 5.0"
+    ss.dependency 'FBSDKCoreKit', "~> #{s.version}"
   end
   s.subspec 'LoginKit' do |ss|
     ss.dependency 'FacebookSDK/CoreKit'
-    ss.dependency 'FBSDKLoginKit', "~> 5.0"
+    ss.dependency 'FBSDKLoginKit', "~> #{s.version}"
   end
   s.subspec 'ShareKit' do |ss|
     ss.dependency 'FacebookSDK/CoreKit'
-    ss.dependency 'FBSDKShareKit', "~> 5.0"
+    ss.dependency 'FBSDKShareKit', "~> #{s.version}"
   end
   s.subspec 'TVOSKit' do |ss|
     ss.platform = :tvos
     ss.dependency 'FacebookSDK/ShareKit'
     ss.dependency 'FacebookSDK/LoginKit'
-    ss.dependency 'FBSDKTVOSKit', "~> 5.0"
-  end
-  s.subspec 'PlacesKit' do |ss|
-    ss.platform = :ios
-    ss.dependency 'FacebookSDK/CoreKit'
-    ss.dependency 'FBSDKPlacesKit', "~> 5.0"
-  end
-  s.subspec 'MarketingKit' do |ss|
-    ss.platform = :ios
-    ss.dependency 'FacebookSDK/CoreKit'
-    ss.dependency 'FBSDKMarketingKit', "~> 5.0"
+    ss.dependency 'FBSDKTVOSKit', "~> #{s.version}"
   end
 end

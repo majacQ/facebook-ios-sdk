@@ -24,7 +24,8 @@ import PackageDescription
 let package = Package(
     name: "Facebook",
     platforms: [
-        .iOS(.v8)
+        .iOS(.v9),
+        .tvOS(.v10)
     ],
     products: [
         .library(
@@ -39,47 +40,51 @@ let package = Package(
             name: "FacebookShare",
             targets: ["FacebookShare"]
         ),
+        .library(
+            name: "FacebookGamingServices",
+            targets: ["FacebookGamingServices"]
+        )
     ],
     dependencies: [],
     targets: [
         .target(
+            name: "FBSDKCoreKit_Basics"
+        ),
+        .target(
             name: "FBSDKCoreKit",
-            dependencies: [],
+            dependencies: ["FBSDKCoreKit_Basics"],
             path: "FBSDKCoreKit/FBSDKCoreKit",
-            exclude: [
-                "Internal/Device",
-                "FBSDKDeviceViewControllerBase.m",
-                "FBSDKDeviceButton.m",
-                "Swift"
-            ],
+            exclude: ["Swift"],
             cSettings: [
                 .headerSearchPath("AppEvents"),
                 .headerSearchPath("AppEvents/Internal"),
                 .headerSearchPath("AppEvents/Internal/Codeless"),
                 .headerSearchPath("AppEvents/Internal/ViewHierarchy/"),
                 .headerSearchPath("AppEvents/Internal/ML"),
-                .headerSearchPath("AppEvents/Internal/RestrictiveDataFilter"),
+                .headerSearchPath("AppEvents/Internal/Integrity"),
+                .headerSearchPath("AppEvents/Internal/EventDeactivation"),
                 .headerSearchPath("AppEvents/Internal/SuggestedEvents"),
                 .headerSearchPath("AppLink"),
                 .headerSearchPath("AppLink/Internal"),
-                .headerSearchPath("Basics/Instrument"),
-                .headerSearchPath("Basics/Internal"),
+                .headerSearchPath("GraphAPI"),
                 .headerSearchPath("Internal"),
                 .headerSearchPath("Internal/Base64"),
                 .headerSearchPath("Internal/BridgeAPI"),
                 .headerSearchPath("Internal/BridgeAPI/ProtocolVersions"),
                 .headerSearchPath("Internal/Cryptography"),
+                .headerSearchPath("Internal/Device"),
                 .headerSearchPath("Internal/ErrorRecovery"),
                 .headerSearchPath("Internal/Instrument"),
                 .headerSearchPath("Internal/Instrument/CrashReport"),
                 .headerSearchPath("Internal/Instrument/ErrorReport"),
+                .headerSearchPath("Internal/Monitoring"),
                 .headerSearchPath("Internal/Network"),
                 .headerSearchPath("Internal/ServerConfiguration"),
                 .headerSearchPath("Internal/TokenCaching"),
-                .headerSearchPath("Internal/UI"),
+                .headerSearchPath("Internal/UI")
             ],
             linkerSettings: [
-                .linkedFramework("Accelerate"),
+                .linkedFramework("Accelerate")
             ]
         ),
         .target(
@@ -91,14 +96,11 @@ let package = Package(
             name: "FBSDKLoginKit",
             dependencies: ["FBSDKCoreKit"],
             path: "FBSDKLoginKit/FBSDKLoginKit",
-            exclude: [
-                "include/FBSDKLoginKit.h",
-                "include/FBSDKLoginButton.h",
-                "Swift"
-            ],
+            exclude: ["Swift"],
             cSettings: [
                 .headerSearchPath("Internal"),
                 .headerSearchPath("../../FBSDKCoreKit/FBSDKCoreKit/Internal"),
+                .define("FBSDK_SWIFT_PACKAGE", to: nil, .when(platforms: [.iOS], configuration: nil))
             ]
         ),
         .target(
@@ -110,16 +112,11 @@ let package = Package(
             name: "FBSDKShareKit",
             dependencies: ["FBSDKCoreKit"],
             path: "FBSDKShareKit/FBSDKShareKit",
-            exclude: [
-                "Swift",
-                "FBSDKDeviceShareButton.h",
-                "FBSDKDeviceShareButton.m",
-                "FBSDKDeviceShareViewController.h",
-                "FBSDKDeviceShareViewController.m",
-            ],
+            exclude: ["Swift"],
             cSettings: [
                 .headerSearchPath("Internal"),
                 .headerSearchPath("../../FBSDKCoreKit/FBSDKCoreKit/Internal"),
+                .define("FBSDK_SWIFT_PACKAGE", to: nil, .when(platforms: [.iOS], configuration: nil))
             ]
         ),
         .target(
@@ -127,5 +124,23 @@ let package = Package(
             dependencies: ["FacebookCore", "FBSDKShareKit"],
             path: "FBSDKShareKit/FBSDKShareKit/Swift"
         ),
-    ]
+        .target(
+            name: "FBSDKGamingServicesKit",
+            dependencies: ["FBSDKCoreKit"],
+            path: "FBSDKGamingServicesKit/FBSDKGamingServicesKit",
+            exclude: ["Swift"],
+            cSettings: [
+                .headerSearchPath("Internal"),
+                .headerSearchPath("../../FBSDKCoreKit/FBSDKCoreKit/Internal"),
+                .headerSearchPath("../../FBSDKShareKit/FBSDKShareKit/Internal"),
+                .define("FBSDK_SWIFT_PACKAGE", to: nil, .when(platforms: [.iOS], configuration: nil))
+            ]
+        ),
+        .target(
+            name: "FacebookGamingServices",
+            dependencies: ["FacebookCore", "FBSDKGamingServicesKit"],
+            path: "FBSDKGamingServicesKit/FBSDKGamingServicesKit/Swift"
+        )
+    ],
+    cxxLanguageStandard: CXXLanguageStandard.cxx11
 )

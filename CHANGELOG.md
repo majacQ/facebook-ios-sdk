@@ -7,7 +7,327 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
-[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v5.11.1...HEAD)
+### Important
+
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v8.2.0...HEAD)
+
+## 8.2.0
+
+### Changed
+- Remove SignalHandler to avoid hiding root cause of crashes caused by fatal signals.
+- Expose functions in `FBSDKUserDataStore` as public for apps using [Audience Network SDK](https://developers.facebook.com/docs/audience-network) only to use advanced matching.
+
+[2020-11-10](https://github.com/facebook/facebook-ios-sdk/releases/tag/v8.2.0) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v8.1.0...v8.2.0)
+
+## 8.1.0
+
+### Added
+- Introduced `AppLinkResolverRequestBuilder` for use in cleaning up and adding tests around `AppLinkResolver`
+
+### Changed
+- Removed version checks for iOS 9 since it’s the default version now.
+- Refactored `AppLinkResolver` to use a request builder
+- Refactored and added tests around `FBSDKProfile` and `FBSDKProfilePictureView`
+- Updated `FBSDKSettings` to use `ADIdentifierManager` for tracking status
+- Removes usages of deprecated `UI_USER_INTERFACE_IDIOM()`
+
+### Fixed
+- Issues with Swift names causing warnings - #1522
+- Fixes bugs related to crash handling - #1444
+- Fixes Carthage distribution to include the correct binary slices when building on Xcode12 - #1484
+- Fixes duplicate symbol for `FBSDKVideoUploader` bug #1512
+- GET requests now default to having a 'fields' parameter to avoid warnings about missing fields #1403
+- Fixes Multithreading issue related to crash reporting - #1550
+
+[2020-10-23](https://github.com/facebook/facebook-ios-sdk/releases/tag/v8.1.0) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v8.0.0...v8.1.0)
+
+## 8.0.0
+
+## Added
+- Added timestamp for install event in iOS 14
+- Added method `setAdvertiserTrackingEnabled` to overwrite the `advertiser_tracking_enabled` flag
+- Added `SKAdNetwork` support for installs
+- Added `SKAdNetwork` support for conversion value in iOS 14
+- Added `FBSDKReferralManager` for integrating with the web referral dialog
+- Added method `loginWithURL` to `FBSDKLoginManager` for supporting deep link authentication
+- Added E2E tests for all in-market versions of the SDK that run on server changes to avoid regressions
+
+## Changed
+- Event handling in iOS 14: will drop events if `setAdvertiserTrackingEnabled` is called with `false` in iOS 14
+- `FBSDKProfile - imageURLForPictureMode:size:` - User profile images will only be available when an access or client token is available
+
+## Deprecated
+- `FBSDKSettings - isAutoInitEnabled` - Auto-initialization flag. Will be removed in the next major release. Future versions of the SDK will not utilize the `+ load` method to automatically initialize the SDK.
+
+## Fixed / Patched
+- #1444 - Update crash handling to use sigaction in signal handler and respect SIG_IGN
+- #1447 - Login form automatically closing when SDK is not initialized on startup
+- #1478 - Minimum iOS deployment target is now 9.0
+- #1485 - StoreKit is now added as a weak framework for CocoaPods
+- Bug fix for Advanced Matching, which was not working on iOS 14
+
+[2020-09-22](https://github.com/facebook/facebook-ios-sdk/releases/tag/v8.0.0) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v7.1.1...v8.0.0)
+
+## 7.1.1
+
+## Fixed
+
+- Fix data processing options issue
+
+[2020-06-25](https://github.com/facebook/facebook-ios-sdk/releases/tag/v7.1.1) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v7.1.0...v7.1.1)
+
+## 7.1.0
+
+## Added
+
+- Introduce DataProcessingOptions
+
+### Deprecated
+
+- Remove UserProperties API
+
+[2020-06-23](https://github.com/facebook/facebook-ios-sdk/releases/tag/v7.1.0) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v7.0.1...v7.1.0)
+
+## 7.0.1
+
+🚨🚨🚨Attention! 🚨🚨🚨
+
+This release fixes the ability to parse bad server configuration data. Please upgrade to at least this version to help avoid major outtages such as [#1374](https://github.com/facebook/facebook-ios-sdk/issues/1374) and [#1427](https://github.com/facebook/facebook-ios-sdk/issues/1427)
+
+## Added
+- Added additional unit tests for FBSDKRestrictiveDataFilterManager
+- Added integration test for building with xcodebuild
+- Added safer implementation of `NSJSONSerialization` methods to `FBSDKTypeUtility` and changed callsites
+- Added 'fuzz' testing class to test our network response parsing won't crash from bad/unexpected values
+
+## Fixed
+
+- Issue #1401
+- Issue #1380
+- Previously, we could not remove AAM data if we opt out some rules. Now, we align with Android AAM and add an internalUserData to save AAM data. And we only send back the data of enabled AAM rules.
+- Fix a bug where we were not updating Event Deactivation or Restrictive Data Filtering if the `enable()` function was called after the `update()` function
+- Restrictive data filtering bug where updating filters would exit early on an empty eventInfo parameter.
+- Enabling bitcode by default; we used to disable bitcode globally and enable it for certain versions of iphoneos due to Xcode 6 issue, given we've dropped the support for Xcode 6, it's cleaner to enable bitcode by default.
+
+## Changed
+- Now using `FBSDKTypeUtility` to provide type safety for Dictionaries and Arrays
+- Updates code so that `NSKeyedUnarchiver` method calls will continue to work no matter what the iOS deployment target is set to.
+- Skips sending back app events when there are no encoded events.
+
+## Deprecated
+
+- MarketingKit
+
+[2020-06-08](https://github.com/facebook/facebook-ios-sdk/releases/tag/v7.0.1) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v7.0.0...v7.0.1)
+
+## 7.0.0
+
+## Changed
+
+- Using version 7.0 of the Facebook Graph API
+- Dropping support for Xcode versions below 11. This is in line with [Apple's plans](https://developer.apple.com/news/?id=03262020b) to disallow submission of Apps that do not include the iOS 13 SDK.
+This means that from v7.0 on, all SDK kits will be built using Xcode 11 and Swift 5.1.
+- Include the enhanced Swift interfaces
+
+This primarily matters for how you include CocoaPods
+
+| Distribution Channel  | Old way                              | New Way              |
+| :---                  | :---                                 | :---                 |
+| CocoaPods             | `pod 'FBSDKCoreKit/Swift'`           | `pod 'FBSDKCoreKit'` |
+| Swift Package Manager | No change                            | No change            |
+| Carthage              | No change                            | No change            |
+
+## Deprecated
+
+- FBSDKMarketingKit
+
+[2020-05-05](https://github.com/facebook/facebook-ios-sdk/releases/tag/v7.0.0) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v6.5.2...v7.0.0)
+
+## 6.5.2
+
+- Various bug fixes
+
+[2020-04-29](https://github.com/facebook/facebook-ios-sdk/releases/tag/v6.5.2) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v6.5.1...v6.5.2)
+
+## 6.5.1
+
+## Fixed
+
+- The Swift interface for SharingDelegate should not have a nullable error in the callback.
+- Fixes issue with login callback during backgrounding.
+- Minor fixes related to Integrity
+
+[2020-04-23](https://github.com/facebook/facebook-ios-sdk/releases/tag/v6.5.1) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v6.5.0...v6.5.1)
+
+## 6.5.0
+
+## Added
+
+- More usecase for Integrity is supported.
+
+[2020-04-20](https://github.com/facebook/facebook-ios-sdk/releases/tag/v6.5.0) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v6.4.0...v6.5.0)
+
+## 6.4.0
+
+## Added
+
+FBSDKMessageDialog now accepts FBSDKSharePhotoContent.
+
+FBSDKGamingServicesKit/FBSDKGamingImageUploader.h
+`uploadImageWithConfiguration:andResultCompletionHandler:`
+`uploadImageWithConfiguration:completionHandler:andProgressHandler:`
+
+FBSDKGamingServicesKit/FBSDKGamingVideoUploader.h
+`uploadVideoWithConfiguration:andResultCompletionHandler:`
+`uploadVideoWithConfiguration:completionHandler:andProgressHandler:`
+
+## Deprecated
+
+FBSDKGamingServicesKit/FBSDKGamingImageUploader.h
+`uploadImageWithConfiguration:andCompletionHandler:`
+
+FBSDKGamingServicesKit/FBSDKGamingVideoUploader.h
+`uploadVideoWithConfiguration:andCompletionHandler:`
+
+[2020-03-25](https://github.com/facebook/facebook-ios-sdk/releases/tag/v6.4.0) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v6.3.0...v6.4.0)
+
+## Changed
+
+Various bug fixes, CI improvements
+
+## 6.3.0
+
+## Added
+
+- Support new event type for suggested events
+
+[2020-03-25](https://github.com/facebook/facebook-ios-sdk/releases/tag/v6.3.0) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v6.2.0...v6.3.0)
+
+## 6.2.0
+
+## Added
+
+- Support for Gaming Video Uploads
+- Allow Gaming Image Uploader to accept a callback
+- [Messenger Sharing](https://developers.facebook.com/docs/messenger-platform/changelog/#20200304)
+
+[2020-03-09](https://github.com/facebook/facebook-ios-sdk/releases/tag/v6.2.0) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v6.0.0...v6.2.0)
+
+## 6.0.0
+
+### Updated
+
+- Uses API version 6.0 by default
+
+### Fixed
+
+- `FBSDKShareDialog` delegate callbacks on apps using iOS 13
+
+### Removed
+
+#### ShareKit
+
+- Facebook Messenger Template and OpenGraph Sharing
+- `FBSDKMessengerActionButton`
+- `FBSDKShareMessengerGenericTemplateContent`
+- `FBSDKShareMessengerGenericTemplateElement`
+- `FBSDKShareMessengerMediaTemplateMediaType`
+- `FBSDKShareMessengerMediaTemplateContent`
+- `FBSDKShareMessengerOpenGraphMusicTemplateContent`
+- `FBSDKShareMessengerURLActionButton`
+- `FBSDKShareAPI` since it exists to make sharing of open graph objects easier. It also requires  the deprecated `publish_actions` permission which is deprecated.
+- Property `pageID` from `FBSDKSharingContent` since it only applies to sharing to Facebook Messenger
+- `FBSDKShareOpenGraphAction`
+- `FBSDKShareOpenGraphContent`
+- `FBSDKShareOpenGraphObject`
+- `FBSDKShareOpenGraphValueContainer`
+
+#### CoreKit
+
+- `FBSDKSettings` property `instrumentEnabled`
+- Sharing of open graph objects. This is because the "publish_actions" permission is deprecated so we should not be providing helper methods that encourage its use. For more details see: https://developers.facebook.com/docs/sharing/opengraph
+- `FBSDKAppEventNameSubscriptionHeartbeat`
+
+#### LoginKit
+
+- `FBSDKLoginBehavior` Login flows no longer support logging in through the native application. This change reflects that.
+
+[2020-02-03](https://github.com/facebook/facebook-ios-sdk/releases/tag/v6.0.0) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v5.15.1...v6.0.0)
+
+## 5.15.1
+
+### Fixed
+- fix multi-thread issue for Crash Report
+- fix write to file issue for Crash Report
+
+[2020-01-28](https://github.com/facebook/facebook-ios-sdk/releases/tag/v5.15.1) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v5.15.0...v5.15.1)
+
+## 5.15.0
+
+### Fixed
+
+- fix for CocoaPods (i.e. macro `FBSDKCOCOAPODS`)
+- fixes a bug in for sharing callbacks for apps using SceneDelegate
+
+[2020-01-21](https://github.com/facebook/facebook-ios-sdk/releases/tag/v5.15.0) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v5.14.0...v5.15.0)
+
+## 5.14.0
+
+### Added
+
+- SPM Support for tvOS
+
+### Fixed
+
+- fix for CocoaPods static libs (i.e. no `use-frameworks!`)
+- various bug fixes and unit test additions
+
+[2020-01-14](https://github.com/facebook/facebook-ios-sdk/releases/tag/v5.14.0) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v5.13.1...v5.14.0)
+
+## 5.13.1
+
+### Fixed
+
+- bug fix for address inferencer weights load
+
+[2019-12-16](https://github.com/facebook/facebook-ios-sdk/releases/tag/v5.13.1) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v5.13.0...v5.13.1)
+
+## 5.13.0
+
+[2019-12-11](https://github.com/facebook/facebook-ios-sdk/releases/tag/v5.13.0) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v5.12.0...v5.13.0)
+
+### Added
+- Parameter deactivation
+
+### Fixed
+- Update ML model to support non-English input
+
+## 5.12.0
+
+### Changed
+- Updated suggested events
+
+[2019-12-03](https://github.com/facebook/facebook-ios-sdk/releases/tag/v5.12.0) |
+[Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v5.11.1...v5.12.0)
 
 ## 5.11.1
 
