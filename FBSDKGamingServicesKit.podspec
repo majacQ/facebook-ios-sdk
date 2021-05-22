@@ -3,7 +3,7 @@
 Pod::Spec.new do |s|
 
   s.name         = 'FBSDKGamingServicesKit'
-  s.version      = '7.0.1'
+  s.version      = '9.0.0'
   s.summary      = 'Official Facebook SDK for iOS to access Facebook Gaming Services'
 
   s.description  = <<-DESC
@@ -12,25 +12,27 @@ Pod::Spec.new do |s|
                    DESC
 
   s.homepage     = 'https://developers.facebook.com/docs/ios/'
-  s.license      = { :type => 'Facebook Platform License', :file => 'LICENSE' }
+  s.license      = { type: 'Facebook Platform License', file: 'LICENSE' }
   s.author       = 'Facebook'
 
   s.platform     = :ios
-  s.ios.deployment_target = '8.0'
+  s.ios.deployment_target = '9.0'
 
   s.swift_version = '5.0'
 
-  s.source       = { :git => 'https://github.com/facebook/facebook-ios-sdk.git',
-                     :tag => "v#{s.version}"
-                    }
+  s.source       = {
+    git: 'https://github.com/facebook/facebook-ios-sdk.git',
+    tag: "v#{s.version}"
+  }
 
   s.weak_frameworks = 'Accounts', 'Social', 'Security', 'Foundation'
 
   s.requires_arc = true
+  s.pod_target_xcconfig = { 'DEFINES_MODULE': 'YES' }
   s.prefix_header_contents = '#define FBSDKCOCOAPODS'
 
   s.source_files   = 'FBSDKGamingServicesKit/FBSDKGamingServicesKit/**/*.{h,m}'
   s.public_header_files = 'FBSDKGamingServicesKit/FBSDKGamingServicesKit/*.{h}'
-  s.dependency 'FBSDKShareKit', "~> #{s.version}"
+  s.dependency 'FBSDKCoreKit', "~> #{s.version}"
 
 end

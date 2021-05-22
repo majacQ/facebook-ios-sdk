@@ -50,7 +50,7 @@ commands:
     steps:
       - attach_workspace:
           at: .
-      - run: carthage build --no-skip-current
+      - run: CARTHAGE_BIN_PATH=$( which carthage ) sh scripts/carthage.sh build --no-skip-current
 
   build_for_release:
     description: Builds libraries for release
@@ -82,7 +82,7 @@ commands:
       - attach_workspace:
           at: .
       - run: |
-          xcodebuild build \
+          xcodebuild clean build \
             -workspace FacebookSDK.xcworkspace \
             -scheme << parameters.scheme >> \
             -configuration << parameters.configuration >>
@@ -133,15 +133,18 @@ commands:
     steps:
       - attach_workspace:
           at: .
-      - run: |
-          # brew install swiftlint
-          sh scripts/run.sh lint swift
+      - run: brew install swiftlint
+      - run: sh scripts/run.sh lint swift
 
   publish_aggregate_cocoapod:
     description: Pushes aggregate pod FacebookSDK to trunk
     steps:
       - attach_workspace:
           at: .
+      - run: |
+          rm -rf ~/Library/Caches/Cocoapods && \
+          rm -rf ~/.cocoapods/repos && \
+          pod repo update
       - run: sh scripts/run.sh release cocoapods FacebookSDK
 
   publish_base_cocoapods:
@@ -156,6 +159,10 @@ commands:
     steps:
       - attach_workspace:
           at: .
+      - run: |
+          rm -rf ~/Library/Caches/Cocoapods && \
+          rm -rf ~/.cocoapods/repos && \
+          pod repo update
       - run: sh scripts/run.sh release cocoapods FBSDKLoginKit FBSDKShareKit
 
   publish_top_level_cocoapods:
@@ -163,6 +170,10 @@ commands:
     steps:
       - attach_workspace:
           at: .
+      - run: |
+          rm -rf ~/Library/Caches/Cocoapods && \
+          rm -rf ~/.cocoapods/repos && \
+          pod repo update
       - run: sh scripts/run.sh release cocoapods FBSDKGamingServicesKit FBSDKTVOSKit
 
   publish_to_github:
@@ -204,7 +215,7 @@ commands:
     steps:
       - attach_workspace:
           at: .
-      - run: sh scripts/run.sh verify_xcode_integration
+      - run: sh scripts/run.sh verify-xcode-integration
 
 jobs:
   setup:
