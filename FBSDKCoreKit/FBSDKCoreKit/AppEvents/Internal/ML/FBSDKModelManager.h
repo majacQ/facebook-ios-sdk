@@ -20,7 +20,7 @@
 
 #if !TARGET_OS_TV
 
-#import <Foundation/Foundation.h>
+ #import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -32,6 +32,9 @@ typedef void (^FBSDKDownloadCompletionBlock)(void);
 + (nullable NSDictionary *)getRulesForKey:(NSString *)useCase;
 + (nullable NSData *)getWeightsForKey:(NSString *)useCase;
 + (nullable NSArray *)getThresholdsForKey:(NSString *)useCase;
+
++ (BOOL)processIntegrity:(nullable NSString *)param;
++ (NSString *)processSuggestedEvents:(NSString *)textFeature denseData:(nullable float *)denseData;
 
 @end
 

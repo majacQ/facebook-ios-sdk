@@ -24,7 +24,7 @@ import PackageDescription
 let package = Package(
     name: "Facebook",
     platforms: [
-        .iOS(.v8),
+        .iOS(.v9),
         .tvOS(.v10)
     ],
     products: [
@@ -43,13 +43,16 @@ let package = Package(
         .library(
             name: "FacebookGamingServices",
             targets: ["FacebookGamingServices"]
-        ),
+        )
     ],
     dependencies: [],
     targets: [
         .target(
+            name: "FBSDKCoreKit_Basics"
+        ),
+        .target(
             name: "FBSDKCoreKit",
-            dependencies: [],
+            dependencies: ["FBSDKCoreKit_Basics"],
             path: "FBSDKCoreKit/FBSDKCoreKit",
             exclude: ["Swift"],
             cSettings: [
@@ -63,8 +66,6 @@ let package = Package(
                 .headerSearchPath("AppEvents/Internal/SuggestedEvents"),
                 .headerSearchPath("AppLink"),
                 .headerSearchPath("AppLink/Internal"),
-                .headerSearchPath("Basics/Instrument"),
-                .headerSearchPath("Basics/Internal"),
                 .headerSearchPath("GraphAPI"),
                 .headerSearchPath("Internal"),
                 .headerSearchPath("Internal/Base64"),
@@ -76,13 +77,14 @@ let package = Package(
                 .headerSearchPath("Internal/Instrument"),
                 .headerSearchPath("Internal/Instrument/CrashReport"),
                 .headerSearchPath("Internal/Instrument/ErrorReport"),
+                .headerSearchPath("Internal/Monitoring"),
                 .headerSearchPath("Internal/Network"),
                 .headerSearchPath("Internal/ServerConfiguration"),
                 .headerSearchPath("Internal/TokenCaching"),
-                .headerSearchPath("Internal/UI"),
+                .headerSearchPath("Internal/UI")
             ],
             linkerSettings: [
-                .linkedFramework("Accelerate"),
+                .linkedFramework("Accelerate")
             ]
         ),
         .target(
@@ -98,6 +100,7 @@ let package = Package(
             cSettings: [
                 .headerSearchPath("Internal"),
                 .headerSearchPath("../../FBSDKCoreKit/FBSDKCoreKit/Internal"),
+                .define("FBSDK_SWIFT_PACKAGE", to: nil, .when(platforms: [.iOS], configuration: nil))
             ]
         ),
         .target(
@@ -113,6 +116,7 @@ let package = Package(
             cSettings: [
                 .headerSearchPath("Internal"),
                 .headerSearchPath("../../FBSDKCoreKit/FBSDKCoreKit/Internal"),
+                .define("FBSDK_SWIFT_PACKAGE", to: nil, .when(platforms: [.iOS], configuration: nil))
             ]
         ),
         .target(
@@ -129,13 +133,14 @@ let package = Package(
                 .headerSearchPath("Internal"),
                 .headerSearchPath("../../FBSDKCoreKit/FBSDKCoreKit/Internal"),
                 .headerSearchPath("../../FBSDKShareKit/FBSDKShareKit/Internal"),
+                .define("FBSDK_SWIFT_PACKAGE", to: nil, .when(platforms: [.iOS], configuration: nil))
             ]
         ),
         .target(
             name: "FacebookGamingServices",
             dependencies: ["FacebookCore", "FBSDKGamingServicesKit"],
             path: "FBSDKGamingServicesKit/FBSDKGamingServicesKit/Swift"
-        ),
+        )
     ],
     cxxLanguageStandard: CXXLanguageStandard.cxx11
 )

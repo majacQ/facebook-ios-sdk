@@ -20,7 +20,7 @@
 #import <XCTest/XCTest.h>
 
 #ifdef BUCK
-#import <FBSDKCoreKit/FBSDKCoreKit.h>
+ #import <FBSDKCoreKit/FBSDKCoreKit.h>
 #else
 @import FBSDKCoreKit;
 #endif
@@ -80,7 +80,11 @@
 {
   FBSDKSharePhoto *photo = [FBSDKShareModelTestUtility photoWithImageURL];
   NSData *data = [NSKeyedArchiver archivedDataWithRootObject:photo];
+#if __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_11_0
+  FBSDKSharePhoto *unarchivedPhoto = [NSKeyedUnarchiver unarchivedObjectOfClass:[FBSDKSharePhoto class] fromData:data error:nil];
+#else
   FBSDKSharePhoto *unarchivedPhoto = [NSKeyedUnarchiver unarchiveObjectWithData:data];
+#endif
   XCTAssertEqualObjects(unarchivedPhoto, photo);
 }
 
@@ -88,10 +92,10 @@
 {
   FBSDKSharePhotoContent *content = [[FBSDKSharePhotoContent alloc] init];
   NSArray *photos = @[
-                      [FBSDKShareModelTestUtility photoWithImageURL],
-                      [FBSDKShareModelTestUtility photoWithImage],
-                      @"my photo",
-                      ];
+    [FBSDKShareModelTestUtility photoWithImageURL],
+    [FBSDKShareModelTestUtility photoWithImage],
+    @"my photo",
+  ];
   XCTAssertThrowsSpecificNamed([content setPhotos:photos], NSException, NSInvalidArgumentException);
 }
 

@@ -20,8 +20,13 @@
 
 @implementation FBSDKGamingVideoUploaderConfiguration
 
-- (instancetype)initWithVideoURL:(NSURL * _Nonnull)videoURL
-                         caption:(NSString * _Nullable)caption;
+- (instancetype)init
+{
+  return [super init];
+}
+
+- (instancetype)initWithVideoURL:(NSURL *_Nonnull)videoURL
+                         caption:(NSString *_Nullable)caption;
 {
   if (self = [super init]) {
     _videoURL = videoURL;

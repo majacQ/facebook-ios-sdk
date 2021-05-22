@@ -16,35 +16,41 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+#import <OCMock/OCMock.h>
 #import <XCTest/XCTest.h>
 
-#import <OCMock/OCMock.h>
-
 #import "FBSDKEventDeactivationManager.h"
+#import "FBSDKRestrictiveDataFilterManager.h"
+#import "FBSDKServerConfigurationFixtures.h"
+#import "FBSDKTestCase.h"
 
-@interface FBSDKEventDeactivationTests : XCTestCase
+@interface FBSDKEventDeactivationTests : FBSDKTestCase
 @end
 
 @implementation FBSDKEventDeactivationTests
 
 - (void)setUp
 {
+  [super setUp];
+
+  NSDictionary<NSString *, id> *events = @{
+    @"fb_mobile_catalog_update" : @{ @"restrictive_param" : @{@"first_name" : @"6"}},
+    @"manual_initiated_checkout" : @{ @"deprecated_param" : @[@"deprecated_3"]},
+  };
+
+  FBSDKServerConfiguration *serverConfiguration = [FBSDKServerConfigurationFixtures configWithDictionary:@{@"restrictiveParams" : events}];
+  [self stubCachedServerConfigurationWithServerConfiguration:serverConfiguration];
+
   [FBSDKEventDeactivationManager enable];
 }
 
 - (void)testProcessParameters
 {
-  NSDictionary<NSString *, id> *events = @{
-    @"fb_mobile_catalog_update" : @{ @"restrictive_param" : @{@"first_name" : @"6"}},
-    @"manual_initiated_checkout" : @{ @"deprecated_param" : @[@"deprecated_3"]},
-  };
-  [FBSDKEventDeactivationManager updateDeactivatedEvents:events];
   NSDictionary<NSString *, id> *parameters = @{@"_ui" : @"UITabBarController",
                                                @"_logTime" : @1576109848,
                                                @"_session_id" : @"30AF582C-0225-40A4-B3EE-2A571AB926F3",
                                                @"fb_mobile_launch_source" : @"Unclassified",
-                                               @"deprecated_3" : @"test",
-  };
+                                               @"deprecated_3" : @"test", };
   NSDictionary<NSString *, id> *result = [FBSDKEventDeactivationManager processParameters:parameters eventName:@"manual_initiated_checkout"];
   XCTAssertNil(result[@"deprecated_3"]);
   XCTAssertNotNil(result[@"_ui"]);
@@ -54,4 +60,3 @@
 }
 
 @end
-

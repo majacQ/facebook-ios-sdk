@@ -3,7 +3,7 @@
 Pod::Spec.new do |s|
 
   s.name         = 'FBSDKLoginKit'
-  s.version      = '6.4.0'
+  s.version      = '8.2.0'
   s.summary      = 'Official Facebook SDK for iOS to access Facebook Platform with features like Login, Share and Message Dialog, App Links, and Graph API'
 
   s.description  = <<-DESC
@@ -14,16 +14,20 @@ Pod::Spec.new do |s|
                    DESC
 
   s.homepage     = 'https://developers.facebook.com/docs/ios/'
-  s.license      = { :type => 'Facebook Platform License', :file => 'LICENSE' }
+  s.license      = {
+    type: 'Facebook Platform License',
+    file: 'LICENSE'
+  }
   s.author       = 'Facebook'
 
   s.platform     = :ios, :tvos
-  s.ios.deployment_target = '8.0'
+  s.ios.deployment_target = '9.0'
   s.tvos.deployment_target = '10.0'
 
-  s.source       = { :git => 'https://github.com/facebook/facebook-ios-sdk.git',
-                     :tag => "v#{s.version}"
-                    }
+  s.source       = {
+    git: 'https://github.com/facebook/facebook-ios-sdk.git',
+    tag: "v#{s.version}"
+  }
 
   s.ios.weak_frameworks = 'Accounts', 'Social', 'Security', 'QuartzCore', 'CoreGraphics', 'UIKit', 'Foundation', 'AudioToolbox'
   s.tvos.weak_frameworks = 'AudioToolbox', 'CoreGraphics', 'Foundation', 'QuartzCore', 'Security', 'UIKit'
@@ -36,16 +40,9 @@ Pod::Spec.new do |s|
 
   s.subspec 'Login' do |ss|
     ss.dependency 'FBSDKCoreKit', "~> #{s.version}"
-    ss.exclude_files = 'FBSDKLoginKit/FBSDKLoginKit/include/**/*'
-    ss.source_files   = 'FBSDKLoginKit/FBSDKLoginKit/**/*.{h,m}'
+    ss.exclude_files = 'FBSDKLoginKit/FBSDKLoginKit/include/**/*',
+                       'FBSDKLoginKit/FBSDKLoginKit/Swift/Exports.swift'
+    ss.source_files   = 'FBSDKLoginKit/FBSDKLoginKit/**/*.{h,m,swift}'
     ss.public_header_files = 'FBSDKLoginKit/FBSDKLoginKit/*.{h}'
   end
-
-  s.subspec 'Swift' do |ss|
-    ss.dependency 'FBSDKCoreKit/Swift', "~> #{s.version}"
-    ss.dependency 'FBSDKLoginKit/Login'
-    ss.exclude_files = 'FBSDKLoginKit/FBSDKLoginKit/Swift/Exports.swift'
-    ss.source_files   = 'FBSDKLoginKit/FBSDKLoginKit/Swift/*.{swift}'
-  end
-
 end

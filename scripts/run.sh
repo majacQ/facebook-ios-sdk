@@ -43,6 +43,12 @@ fi
 # Main
 main() {
   if [ -z "${SDK_SCRIPTS_DIR:-}" ]; then
+
+    # Dirty trick to avoid having to install core utils on CircleCI
+    realpath() {
+      [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+    }
+
     # Set global variables
 
     SDK_SCRIPTS_DIR=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
@@ -62,14 +68,13 @@ main() {
     SDK_KITS=(
       "${SDK_BASE_KITS[@]}"
       "$GAMING_SERVICES_KIT"
-      "FBSDKMarketingKit"
       "FBSDKTVOSKit"
     )
 
     SDK_VERSION_FILES=(
       "Configurations/Version.xcconfig"
       "FBSDKCoreKit/FBSDKCoreKit/FBSDKCoreKit.h"
-      "FBSDKCoreKit/FBSDKCoreKit/Basics/Instrument/FBSDKCrashHandler.m"
+      "Sources/FBSDKCoreKit_Basics/FBSDKCrashHandler.m"
     )
 
     SDK_GRAPH_API_VERSION_FILES=(
@@ -123,6 +128,7 @@ main() {
   "tag-current-version") tag_current_version "$@" ;;
   "lint") lint_sdk "$@" ;;
   "verify-spm-headers") verify_spm_headers "$@" ;;
+  "verify-xcode-integration") verify_xcode_integration "$@" ;;
   "--help" | "help") echo "Check main() for supported commands" ;;
   esac
 }
@@ -273,39 +279,18 @@ tag_current_version() {
 # Build
 build_sdk() {
   build_xcode_workspace() {
-    # Redirecting to /dev/null because we only care about errors here and the full output drowns Travis
     xcodebuild build \
       -workspace "${1:-}" \
       -sdk "${2:-}" \
       -scheme "${3:-}" \
-      -configuration Debug > /dev/null
-  }
-
-  # Builds all Swift dynamic frameworks.
-  # Stores the output in the top level build directory
-  # This should be combined with the build_carthage function
-  # once we drop support for Xcode 10.2
-  build_swift() {
-    mkdir -p Temp
-    xcodebuild clean build \
-      -workspace "${1:-}" \
-      -sdk "${2:-}" \
-      -scheme BuildAllSwiftKits \
-      -configuration Debug \
-      -derivedDataPath Temp
-
-    for kit in "${SDK_BASE_KITS[@]}"; do
-      mv Temp/Build/Products/Debug-iphonesimulator/"$kit".framework build
-    done
-
-    rm -rf Temp
+      -configuration Debug | xcpretty
   }
 
   build_carthage() {
-    carthage build --no-skip-current
+    CARTHAGE_BIN_PATH=$( which carthage ) sh scripts/carthage.sh build --no-skip-current
 
     if [ "${1:-}" == "--archive" ]; then
-      carthage archive --output Carthage/Release/
+      CARTHAGE_BIN_PATH=$( which carthage ) sh scripts/carthage.sh archive --output Carthage/Release/
     fi
   }
 
@@ -314,14 +299,11 @@ build_sdk() {
 
     echo "Building Swift Package - $scheme"
 
-    # Redirecting to /dev/null because we only care about errors here and the full output drowns Travis
-    # The echo before building the scheme should be enough to keep travis from timing out for lack of
-    # visible output
     xcodebuild clean build \
       -workspace .swiftpm/xcode/package.xcworkspace \
       -scheme "$scheme" \
       -sdk iphonesimulator \
-      OTHER_SWIFT_FLAGS="-D SWIFT_PACKAGE" > /dev/null
+      OTHER_SWIFT_FLAGS="-D SWIFT_PACKAGE" | xcpretty
     done
   }
 
@@ -330,14 +312,15 @@ build_sdk() {
 
     local branch
 
-    if [ -n "$TRAVIS_PULL_REQUEST" ] && [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
-      branch="refs/pull/$TRAVIS_PULL_REQUEST/merge";
-    elif [ -n "$TRAVIS_BRANCH" ]; then
-      branch="$TRAVIS_BRANCH";
+    if [ -n "$CIRCLE_PULL_REQUEST" ] && [ "$CIRCLE_PULL_REQUEST" != "false" ]; then
+      PR_NUMBER="${CIRCLE_PULL_REQUEST//[!0-9]/}"
+      branch="refs/pull/$PR_NUMBER/merge";
+    elif [ -n "$CIRCLE_BRANCH" ]; then
+      branch="$CIRCLE_BRANCH";
     else
       branch="master"
     fi
-    echo "Using travis branch: $branch"
+    echo "Using branch: $branch"
 
     cd "$SDK_DIR"/samples/SmoketestSPM
 
@@ -346,11 +329,8 @@ build_sdk() {
         -c "set :objects:F4CEA53E23C29C9E0086EB16:requirement:branch $branch" \
         SmoketestSPM.xcodeproj/project.pbxproj
 
-    # Redirecting to /dev/null because we only care about errors here and the full output drowns Travis
-    # The echo before building the scheme should be enough to keep travis from timing out for lack of
-    # visible output
     xcodebuild build -scheme SmoketestSPM \
-      -sdk iphonesimulator > /dev/null
+      -sdk iphonesimulator | xcpretty
 
     set -u # Resume failing on undefined variables
   }
@@ -362,7 +342,6 @@ build_sdk() {
   "carthage") build_carthage "$@" ;;
   "spm") build_spm "$@" ;;
   "spm-integration") build_spm_integration ;;
-  "swift") build_swift "$@" ;;
   "xcode") build_xcode_workspace "$@" ;;
   *) echo "Unsupported Build: $build_type" ;;
   esac
@@ -453,65 +432,20 @@ release_sdk() {
     mkdir -p build/Release
     rm -rf build/Release/*
 
-    # Warning: This function will move the Swift schemes and not clean up after itself.
-    # This is intended to be run in CI on container jobs so this is not an issue.
-    # If running locally you will need to clean the directory after running.
-    include_swift_schemes() {
-      for kit in "${SDK_KITS[@]}"; do
-        rm "$kit/$kit".xcodeproj/xcshareddata/xcschemes/* || continue
-      done
-
-      for kit in "${SDK_BASE_KITS[@]}"; do
-        mv "$kit/$kit/Swift/"*.xcscheme "$kit/$kit.xcodeproj/xcshareddata/xcschemes/"
-      done
-    }
-
-    release_swift_dynamic() {
-      carthage build --no-skip-current
-      carthage archive --output build/Release/
-      # This is a little unintuitive. Carthage outputs are based on module name instead of
-      # target/scheme name. So FBSDKCoreKit.framework.zip IS actually the Swift enabled kits.
-      mv build/Release/FBSDKCoreKit.framework.zip build/Release/SwiftDynamic.zip
-    }
-
-    release_swift_static() {
-      mkdir -p Temp
-
-      for kit in "${SDK_BASE_KITS[@]}"; do
-        # Redirecting to /dev/null because we only care about errors here and the full output drowns Travis
-        xcodebuild build \
-        -workspace FacebookSDK.xcworkspace \
-        -scheme "$kit"Swift \
-        -configuration Release \
-        -derivedDataPath Temp > /dev/null
-
-        mv Temp/Build/Products/Release-iphoneos/"$kit".framework build/Release
-
-        cd build/Release || exit
-        zip -r -m "$kit"-Swift.zip "$kit".framework
-        cd ..
-
-        cd ..
-      done
-
-      rm -rf Temp
-    }
-
     # Release frameworks in dynamic (mostly for Carthage)
     release_dynamic() {
-      carthage build --no-skip-current
-      carthage archive --output build/Release/
+      CARTHAGE_BIN_PATH=$( which carthage ) sh scripts/carthage.sh build --no-skip-current
+      CARTHAGE_BIN_PATH=$( which carthage ) sh scripts/carthage.sh archive --output build/Release/
       mv build/Release/FBSDKCoreKit.framework.zip build/Release/FacebookSDK_Dynamic.framework.zip
     }
 
     # Release frameworks in static
     release_static() {
       release_basics() {
-        # Redirecting to /dev/null because we only care about errors here and the full output drowns Travis
-        xcodebuild build \
+        xcodebuild clean build \
          -workspace FacebookSDK.xcworkspace \
          -scheme BuildCoreKitBasics \
-         -configuration Release > /dev/null
+         -configuration Release | xcpretty
 
         kit="FBSDKCoreKit_Basics"
         cd build || exit
@@ -527,17 +461,15 @@ release_sdk() {
         cd ..
       }
 
-      # Redirecting to /dev/null because we only care about errors here and the full output drowns Travis
-      xcodebuild build \
+      xcodebuild clean build \
        -workspace FacebookSDK.xcworkspace \
        -scheme BuildAllKits \
-       -configuration Release > /dev/null
+       -configuration Release | xcpretty
 
-      # Redirecting to /dev/null because we only care about errors here and the full output drowns Travis
-      xcodebuild build \
+      xcodebuild clean build \
        -workspace FacebookSDK.xcworkspace \
        -scheme BuildAllKits_TV \
-       -configuration Release > /dev/null
+       -configuration Release | xcpretty
 
       cd build || exit
       zip -r FacebookSDK_static.zip ./*.framework ./*/*.framework
@@ -566,38 +498,32 @@ release_sdk() {
       release_basics
     }
 
-    # TODO: Remove conditional when we drop support for Xcode 10.2
-    if [ "${1:-}" == "swift" ]; then
-      include_swift_schemes
-      release_swift_dynamic
-      release_swift_static
-    else
-      release_dynamic
-      release_static
-    fi
+    local release_type=${1:-}
+    if [ -n "$release_type" ]; then shift; fi
+
+    case "$release_type" in
+    "static") release_static "$@" ;;
+    "dynamic") release_dynamic "$@" ;;
+    *) release_dynamic && release_static ;;
+    esac
   }
 
   # Release Cocoapods
   release_cocoapods() {
-    for spec in "${SDK_POD_SPECS[@]}"; do
-      if [ ! -f "$spec" ]; then
+    for spec in "$@"; do
+      if [ ! -f "$spec".podspec ]; then
         echo "*** ERROR: unable to release $spec"
         continue
       fi
 
-      pod trunk push --allow-warnings "$spec" "$@" || { echo "Failed to push $spec"; exit 1; }
-
-      # Super naive attempt to beat the race condition of published pods
-      # not being available as dependencies fast enough to be used by other pods.
-      sleep 180
-
-      # Update the repo with the newly pushed pod
-      pod repo update
+      pod trunk push --allow-warnings "$spec".podspec || { echo "Failed to push $spec"; exit 1; }
     done
   }
 
   release_docs() {
     for kit in "${SDK_KITS[@]}"; do
+      rm -rf "$kit/build" || true
+
       ruby "$SDK_SCRIPTS_DIR"/genDocs.rb "$kit"
 
       # Zip the result so it can be uploaded easily
@@ -610,40 +536,6 @@ release_sdk() {
     done
   }
 
-  # Generate External Docs Changelog
-  release_external_changelog() {
-    echo "Releasing Changelog"
-
-    local current_version_underscore=${SDK_CURRENT_VERSION//./_}
-    local current_date
-    current_date=$(date +%Y-%m-%d)
-    local external_changelog="## $SDK_CURRENT_VERSION - $current_date {#$current_version_underscore}"
-    local start_logging=0
-    local tfile
-    tfile=$(mktemp)
-
-    while IFS= read -r line; do
-      case "$line" in
-      "## $SDK_CURRENT_VERSION")
-        start_logging=1
-        ;;
-      "## "*)
-        if [[ $start_logging == 1 ]]; then
-          start_logging=0
-        fi
-        ;;
-      *)
-        if [[ $start_logging == 1 ]]; then
-          external_changelog=$external_changelog"\n"$line
-        fi
-        ;;
-      esac
-    done <"CHANGELOG.md"
-
-    echo "$external_changelog" >"$tfile"
-    api_update_guide_doc "$tfile"
-  }
-
   local release_type=${1:-}
   if [ -n "$release_type" ]; then shift; fi
 
@@ -651,7 +543,6 @@ release_sdk() {
   "github") release_github "$@" ;;
   "cocoapods") release_cocoapods "$@" ;;
   "docs" | "documentation") release_docs "$@" ;;
-  "changelog") release_external_changelog "$@" ;;
   *) echo "Unsupported Release: $release_type" ;;
   esac
 }
@@ -659,6 +550,11 @@ release_sdk() {
 # Check Release Status
 check_release_status() {
   local version_to_check=${1:-}
+
+  if [ -z "$version_to_check" ]; then
+    version_to_check=$SDK_CURRENT_VERSION
+  fi
+
   local release_success=0
 
   if ! is_valid_semver "$version_to_check"; then
@@ -676,6 +572,13 @@ check_release_status() {
   for spec in "${SDK_POD_SPECS[@]}"; do
     if [ ! -f "$spec" ]; then
       echo "*** ERROR: unable to release $spec"
+      continue
+    fi
+
+    # Exclude aggregate pod FacebookSDK.
+    # We release it separately from the CI process
+    # because it contains proprietary MarketingKit source code
+    if [ "$spec"  == "$SDK_FRAMEWORK_NAME.podspec" ]; then
       continue
     fi
 
@@ -723,6 +626,16 @@ does_version_exist() {
   fi
 
   false
+}
+
+# Builds the test app locally to ensure all frameworks still compile
+verify_xcode_integration() {
+  echo "Verifying the TextXcodeIntegration App builds"
+  xcodebuild clean build \
+    -quiet \
+    -sdk iphonesimulator \
+    -workspace testing/TestXcodeIntegration/TestXcodeIntegration.xcworkspace/ \
+    -scheme TestXcodeIntegration
 }
 
 verify_spm_headers() {
