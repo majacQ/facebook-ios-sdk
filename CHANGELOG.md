@@ -7,6 +7,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+### Added
+
+- Added ability to add `messenger_page_id` param to `FBSDKLoginButton` and `FBSDKLoginConfiguration`
+- Added `FBSDKApplicationObserving` - a protocol for describing types that can optional respond to lifecycle events propagated by `ApplicationDelegate`
+- Added `addObserver:` and `removeObserver:` to `FBSDKApplicationDelegate`
+- Added `startWithCompletion:` to `FBSDKGraphRequest`. Replaces `startWithCompletionHandler:`
+- Added `addRequest:completion` to `FBSDKGraphRequestConnection`. Replaces `addRequest:completionHandler:`.
+- Added `addRequest:name:completion:` to `FBSDKGraphRequestConnection`. Replaces `addRequest:batchEntryName:completionHandler:`.
+- Added `addRequest:parameters:completion:` to `FBSDKGraphRequestConnection`. Replaces `addRequest:batchParameters:completionHandler:`.
+
+### Deprecated
+
+- `FBSDKGraphRequestBlock`. Replaced by `FBSDKGraphRequestCompletion` which returns an abstract `FBSDKGraphRequestConnection` in the form `id<FBSDKGraphRequestConnecting>` (ObjC) or `GraphRequestConnecting` (Swift)
+- `FBSDKGraphRequest`'s `startWithCompletionHandler:` replaced by `startWithCompletion:`
+- `FBSDKGraphRequestConnection`'s `addRequest:completionHandler:` replaced by `addRequest:completion:`
+- `FBSDKGraphRequestConnection`'s `addRequest:batchEntryName:completionHandler:` replaced by `addRequest:name:completion:`
+- `FBSDKGraphRequestConnection`'s `addRequest:batchParameters:completionHandler:` replaced by `addRequest:parameters:completion:`
+- `FBSDKGraphRequestBlock`
+
+### Removed
+
+- `AppLinkReturnToRefererControllerDelegate`
+- `AppLinkReturnToRefererController`
+- `FBSDKIncludeStatusBarInSize`
+- `AppLinkReturnToRefererViewDelegate`
+- `FBAppLinkReturnToRefererView`
+- `FBSDKApplicationDelegate.initializeSDK:launchOptions:`. The replacement method is `FBSDKApplicationDelegate.application:didFinishLaunchingWithOptions:`
+- `FBSDKErrorRecoveryAttempting`'s `attemptRecoveryFromError:optionIndex:delegate:didRecoverSelector:contextInfo:`
+- `FBSDKProfile`'s `initWithUserID:firstName:middleName:lastName:name:linkURL:refreshDate:imageURL:email:`
+- `FBSDKProfile`'s `initWithUserID:firstName:middleName:lastName:name:linkURL:refreshDate:imageURL:email:friendIDs:birthday:ageRange:isLimited:`
+- `FBSDKProfile`'s `initWithUserID:firstName:middleName:lastName:name:linkURL:refreshDate:imageURL:email:friendIDs:`
+- `FBSDKProfile`'s `initWithUserID:firstName:middleName:lastName:name:linkURL:refreshDate:imageURL:email:friendIDs:birthday:ageRange:`
+- `FBSDKAccessTokensBlock`
+- `FBSDKTestUsersManager`
+- `FBSDKGraphErrorRecoveryProcessor`'s `delegate` property
+- `FBSDKGraphErrorRecoveryProcessor`'s `didPresentErrorWithRecovery:contextInfo:`
+- `FBSDKGamingVideoUploader`'s `uploadVideoWithConfiguration:andCompletionHandler:`
+- `FBSDKGamingImageUploader`'s `uploadImageWithConfiguration:andCompletionHandler:`
+
 [Full Changelog](https://github.com/facebook/facebook-ios-sdk/compare/v9.3.0...HEAD)
 
 ## 9.3.0

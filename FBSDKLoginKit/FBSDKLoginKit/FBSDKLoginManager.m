@@ -31,17 +31,14 @@
   #import <FBSDKCoreKit/FBSDKCoreKit.h>
  #endif
 
- #ifdef FBSDKCOCOAPODS
-  #import <FBSDKCoreKit/FBSDKCoreKit+Internal.h>
- #else
-  #import "FBSDKCoreKit+Internal.h"
- #endif
-
+ #import "FBSDKAuthenticationTokenFactory.h"
+ #import "FBSDKCoreKitBasicsImportForLoginKit.h"
  #import "FBSDKLoginCompletion.h"
  #import "FBSDKLoginConstants.h"
  #import "FBSDKLoginError.h"
  #import "FBSDKLoginManagerLogger.h"
  #import "FBSDKLoginUtility.h"
+ #import "FBSDKMonotonicTime.h"
  #import "FBSDKPermission.h"
  #import "_FBSDKLoginRecoveryAttempter.h"
 
@@ -150,7 +147,10 @@ FBSDKLoginAuthType FBSDKLoginAuthTypeReauthorize = @"reauthorize";
 
   NSDictionary *params = [self logInParametersFromURL:url];
   if (params) {
-    id<FBSDKLoginCompleting> completer = [[FBSDKLoginURLCompleter alloc] initWithURLParameters:params appID:[FBSDKSettings appID]];
+    id<FBSDKLoginCompleting> completer = [[FBSDKLoginURLCompleter alloc] initWithURLParameters:params
+                                                                                         appID:FBSDKSettings.appID
+                                                                            connectionProvider:FBSDKGraphRequestConnectionFactory.new
+                                                                    authenticationTokenCreator:FBSDKAuthenticationTokenFactory.new];
     [completer completeLoginWithHandler:^(FBSDKLoginCompletionParameters *parameters) {
       [self completeAuthentication:parameters expectChallenge:NO];
     }];
@@ -185,7 +185,7 @@ FBSDKLoginAuthType FBSDKLoginAuthTypeReauthorize = @"reauthorize";
       NSString *errorStr = @"** WARNING: You are trying to start a login while a previous login has not finished yet."
       "This is unsupported behavior. You should wait until the previous login handler gets called to start a new login.";
       [FBSDKLogger singleShotLogEntry:FBSDKLoggingBehaviorDeveloperErrors
-                         formatString:@"%@", errorStr];
+                             logEntry:errorStr];
       return NO;
     }
     case FBSDKLoginManagerStatePerformingLogin: {
@@ -287,7 +287,7 @@ FBSDKLoginAuthType FBSDKLoginAuthTypeReauthorize = @"reauthorize";
       _handler = nil;
     } else {
       [FBSDKLogger singleShotLogEntry:FBSDKLoggingBehaviorDeveloperErrors
-                         formatString:@"** WARNING: You are requesting permissions inside the completion block of an existing login."
+                             logEntry:@"** WARNING: You are requesting permissions inside the completion block of an existing login."
        "This is unsupported behavior. You should request additional permissions only when they are needed, such as requesting for publish_actions"
        "when the user performs a sharing action."];
     }
@@ -337,6 +337,10 @@ FBSDKLoginAuthType FBSDKLoginAuthTypeReauthorize = @"reauthorize";
 
   NSSet *permissions = [configuration.requestedPermissions setByAddingObject:[[FBSDKPermission alloc]initWithString:@"openid"]];
   [FBSDKTypeUtility dictionary:loginParams setObject:[permissions.allObjects componentsJoinedByString:@","] forKey:@"scope"];
+
+  if (configuration.messengerPageId) {
+    [FBSDKTypeUtility dictionary:loginParams setObject:configuration.messengerPageId forKey:@"messenger_page_id"];
+  }
 
   NSError *error;
   NSURL *redirectURL = [FBSDKInternalUtility appURLWithHost:@"authorize" path:@"" queryParameters:@{} error:&error];
@@ -476,7 +480,7 @@ FBSDKLoginAuthType FBSDKLoginAuthTypeReauthorize = @"reauthorize";
 
 + (NSString *)stringForChallenge
 {
-  NSString *challenge = [FBSDKCrypto randomString:FBClientStateChallengeLength];
+  NSString *challenge = fb_randomString(FBClientStateChallengeLength);
 
   return [challenge stringByReplacingOccurrencesOfString:@"+" withString:@"="];
 }
@@ -496,7 +500,7 @@ FBSDKLoginAuthType FBSDKLoginAuthTypeReauthorize = @"reauthorize";
                                                                 tokenString:loginResult.token.tokenString
                                                                  HTTPMethod:nil
                                                                       flags:FBSDKGraphRequestFlagDoNotInvalidateTokenOnError | FBSDKGraphRequestFlagDisableErrorRecovery];
-  FBSDKGraphRequestBlock handler = ^(FBSDKGraphRequestConnection *connection, id result, NSError *error) {
+  FBSDKGraphRequestCompletion handler = ^(id<FBSDKGraphRequestConnecting> connection, id result, NSError *error) {
     NSString *actualID = result[@"id"];
     if ([currentToken.userID isEqualToString:actualID]) {
       [FBSDKAccessToken setCurrentAccessToken:loginResult.token];
@@ -511,8 +515,8 @@ FBSDKLoginAuthType FBSDKLoginAuthTypeReauthorize = @"reauthorize";
     }
   };
 
-  FBSDKGraphRequestConnection *connection = (FBSDKGraphRequestConnection *)[connectionProvider createGraphRequestConnection];
-  [connection addRequest:request completionHandler:handler];
+  id<FBSDKGraphRequestConnecting> connection = [connectionProvider createGraphRequestConnection];
+  [connection addRequest:request completion:handler];
   [connection start];
 }
 
@@ -679,7 +683,9 @@ FBSDKLoginAuthType FBSDKLoginAuthTypeReauthorize = @"reauthorize";
   if (isFacebookURL) {
     NSDictionary *urlParameters = [FBSDKLoginUtility queryParamsFromLoginURL:url];
     id<FBSDKLoginCompleting> completer = [[FBSDKLoginURLCompleter alloc] initWithURLParameters:urlParameters
-                                                                                         appID:[FBSDKSettings appID]];
+                                                                                         appID:FBSDKSettings.appID
+                                                                            connectionProvider:FBSDKGraphRequestConnectionFactory.new
+                                                                    authenticationTokenCreator:FBSDKAuthenticationTokenFactory.new];
 
     // any necessary strong reference is maintained by the FBSDKLoginURLCompleter handler
     [completer completeLoginWithHandler:^(FBSDKLoginCompletionParameters *parameters) {

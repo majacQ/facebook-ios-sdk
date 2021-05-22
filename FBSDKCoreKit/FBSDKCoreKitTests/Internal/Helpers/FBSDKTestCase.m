@@ -28,8 +28,11 @@
 
 #import "FBSDKAppEvents.h"
 #import "FBSDKAppEvents+Internal.h"
+#import "FBSDKAppEventsConfigurationManager.h"
 #import "FBSDKAppEventsState.h"
 #import "FBSDKApplicationDelegate+Internal.h"
+#import "FBSDKBridgeAPI.h"
+#import "FBSDKBridgeAPI+Internal.h"
 #import "FBSDKCoreKit+Internal.h"
 #import "FBSDKCoreKitTestUtility.h"
 #import "FBSDKCrashObserver.h"
@@ -437,7 +440,7 @@ typedef void (^FBSDKSKAdNetworkReporterBlock)(void);
 
 - (void)stubGraphRequestWithResult:(id)result error:(nullable NSError *)error connection:(nullable FBSDKGraphRequestConnection *)connection
 {
-  OCMStub([_graphRequestMock startWithCompletionHandler:([OCMArg invokeBlockWithArgs:[self nsNullIfNil:connection], [self nsNullIfNil:result], [self nsNullIfNil:error], nil])]);
+  OCMStub([_graphRequestMock startWithCompletion:([OCMArg invokeBlockWithArgs:[self nsNullIfNil:connection], [self nsNullIfNil:result], [self nsNullIfNil:error], nil])]);
 }
 
 - (void)stubGraphRequestPiggybackManagerLastRefreshTryWith:(NSDate *)date
@@ -453,11 +456,6 @@ typedef void (^FBSDKSKAdNetworkReporterBlock)(void);
 - (void)stubIsDataProcessingRestricted:(BOOL)isRestricted
 {
   OCMStub(ClassMethod([_settingsClassMock isDataProcessingRestricted])).andReturn(isRestricted);
-}
-
-- (void)stubFacebookDomainPartWith:(NSString *)domainPart
-{
-  OCMStub(ClassMethod([_settingsClassMock facebookDomainPart])).andReturn(domainPart);
 }
 
 - (void)stubOpenURLWith:(BOOL)openURL

@@ -18,11 +18,8 @@
 
 #import "FBSDKAuthenticationTokenClaims.h"
 
-#ifdef FBSDKCOCOAPODS
- #import <FBSDKCoreKit/FBSDKCoreKit+Internal.h>
-#else
- #import "FBSDKCoreKit+Internal.h"
-#endif
+#import "FBSDKCoreKitBasicsImport.h"
+#import "FBSDKSettings.h"
 
 static long const MaxTimeSinceTokenIssued = 10 * 60; // 10 mins
 
@@ -36,9 +33,9 @@ static long const MaxTimeSinceTokenIssued = 10 * 60; // 10 mins
                         iat:(long)iat
                         sub:(NSString *)sub
                        name:(nullable NSString *)name
-                  firstName:(nullable NSString *)firstName
+                  givenName:(nullable NSString *)givenName
                  middleName:(nullable NSString *)middleName
-                   lastName:(nullable NSString *)lastName
+                 familyName:(nullable NSString *)familyName
                       email:(nullable NSString *)email
                     picture:(nullable NSString *)picture
                 userFriends:(nullable NSArray<NSString *> *)userFriends
@@ -58,9 +55,9 @@ static long const MaxTimeSinceTokenIssued = 10 * 60; // 10 mins
     _iat = iat;
     _sub = sub;
     _name = name;
-    _firstName = firstName;
+    _givenName = givenName;
     _middleName = middleName;
-    _lastName = lastName;
+    _familyName = familyName;
     _email = email;
     _picture = picture;
     _userFriends = userFriends;
@@ -110,9 +107,9 @@ static long const MaxTimeSinceTokenIssued = 10 * 60; // 10 mins
       BOOL userIDValid = sub.length > 0;
 
       NSString *name = [FBSDKTypeUtility coercedToStringValue:claimsDict[@"name"]];
-      NSString *firstName = [FBSDKTypeUtility coercedToStringValue:claimsDict[@"first_name"]];
+      NSString *givenName = [FBSDKTypeUtility coercedToStringValue:claimsDict[@"given_name"]];
       NSString *middleName = [FBSDKTypeUtility coercedToStringValue:claimsDict[@"middle_name"]];
-      NSString *lastName = [FBSDKTypeUtility coercedToStringValue:claimsDict[@"last_name"]];
+      NSString *familyName = [FBSDKTypeUtility coercedToStringValue:claimsDict[@"family_name"]];
       NSString *email = [FBSDKTypeUtility coercedToStringValue:claimsDict[@"email"]];
       NSString *picture = [FBSDKTypeUtility coercedToStringValue:claimsDict[@"picture"]];
       NSString *userBirthday = [FBSDKTypeUtility coercedToStringValue:claimsDict[@"user_birthday"]];
@@ -155,9 +152,9 @@ static long const MaxTimeSinceTokenIssued = 10 * 60; // 10 mins
                                                                iat:iat
                                                                sub:sub
                                                               name:name
-                                                         firstName:firstName
+                                                         givenName:givenName
                                                         middleName:middleName
-                                                          lastName:lastName
+                                                        familyName:familyName
                                                              email:email
                                                            picture:picture
                                                        userFriends:userFriends
@@ -206,9 +203,9 @@ static long const MaxTimeSinceTokenIssued = 10 * 60; // 10 mins
   && _iat == claims.iat
   && [_sub isEqualToString:claims.sub]
   && [_name isEqualToString:claims.name]
-  && [_firstName isEqualToString:claims.firstName]
+  && [_givenName isEqualToString:claims.givenName]
   && [_middleName isEqualToString:claims.middleName]
-  && [_lastName isEqualToString:claims.lastName]
+  && [_familyName isEqualToString:claims.familyName]
   && [_email isEqualToString:claims.email]
   && [_picture isEqualToString:claims.picture]
   && [_userFriends isEqualToArray:claims.userFriends]

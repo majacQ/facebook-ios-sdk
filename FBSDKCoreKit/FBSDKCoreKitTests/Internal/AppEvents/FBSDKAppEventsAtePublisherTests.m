@@ -30,6 +30,12 @@
 
 @end
 
+@interface FBSDKAppEventsAtePublisher ()
+
+@property (nonatomic) BOOL isProcessing;
+
+@end
+
 @implementation FBSDKAppEventsAtePublisherTests
 
 static const int TWELVE_HOURS_AGO_IN_SECONDS = -12 * 60 * 60;
@@ -78,7 +84,7 @@ static const int FORTY_EIGHT_HOURS_AGO_IN_SECONDS = -48 * 60 * 60;
 
   [publisher publishATE];
 
-  OCMVerify([graphRequestMock startWithCompletionHandler:[OCMArg any]]);
+  OCMVerify([graphRequestMock startWithCompletion:[OCMArg any]]);
 
   [graphRequestMock stopMocking];
   graphRequestMock = nil;
@@ -88,6 +94,11 @@ static const int FORTY_EIGHT_HOURS_AGO_IN_SECONDS = -48 * 60 * 60;
     self.store.capturedObjectRetrievalKey,
     key,
     "Should use the store to access the last published date"
+  );
+
+  XCTAssertFalse(
+    publisher.isProcessing,
+    "After processing, isProcessing should equal to NO"
   );
 }
 
@@ -109,7 +120,7 @@ static const int FORTY_EIGHT_HOURS_AGO_IN_SECONDS = -48 * 60 * 60;
 
   FBSDKAppEventsAtePublisher *publisher = [[FBSDKAppEventsAtePublisher alloc] initWithAppIdentifier:@"mockAppID" store:self.store];
 
-  OCMReject([graphRequestMock startWithCompletionHandler:[OCMArg any]]);
+  OCMReject([graphRequestMock startWithCompletion:[OCMArg any]]);
 
   [publisher publishATE];
 
@@ -121,6 +132,11 @@ static const int FORTY_EIGHT_HOURS_AGO_IN_SECONDS = -48 * 60 * 60;
     self.store.capturedObjectRetrievalKey,
     key,
     "Should use the store to access the last published date"
+  );
+
+  XCTAssertFalse(
+    publisher.isProcessing,
+    "After processing, isProcessing should equal to NO"
   );
 }
 
@@ -145,7 +161,7 @@ static const int FORTY_EIGHT_HOURS_AGO_IN_SECONDS = -48 * 60 * 60;
 
   [publisher publishATE];
 
-  OCMVerify([graphRequestMock startWithCompletionHandler:[OCMArg any]]);
+  OCMVerify([graphRequestMock startWithCompletion:[OCMArg any]]);
 
   [graphRequestMock stopMocking];
   graphRequestMock = nil;
@@ -155,6 +171,11 @@ static const int FORTY_EIGHT_HOURS_AGO_IN_SECONDS = -48 * 60 * 60;
     self.store.capturedObjectRetrievalKey,
     key,
     "Should use the store to access the last published date"
+  );
+
+  XCTAssertFalse(
+    publisher.isProcessing,
+    "After processing, isProcessing should equal to NO"
   );
 }
 

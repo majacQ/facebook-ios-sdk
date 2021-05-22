@@ -20,10 +20,13 @@
 #import <AdSupport/AdSupport.h>
 
 #import "AEM+Testing.h"
+#import "ApplicationDelegate+Testing.h"
 #import "Button+Testing.h"
 #import "CodelessIndexer+Testing.h"
+#import "FBSDKAccessToken+Internal.h"
 #import "FBSDKAppStoreReceiptProviding.h"
 #import "FBSDKAppEventsFlushReason.h"
+#import "FBSDKAuthenticationStatusUtility.h"
 #import "FBSDKHybridAppEventsScriptMessageHandler+Testing.h"
 #import "FBSDKBridgeAPIProtocolWebV1.h"
 #import "FBSDKBridgeAPIProtocolWebV2+Testing.h"
@@ -43,13 +46,19 @@
 #import "FBSDKErrorReport.h"
 #import "FBSDKErrorReport+Testing.h"
 #import "FBSDKFeatureExtracting.h"
+#import "FBSDKGraphRequestConnecting+Internal.h"
+#import "FBSDKGraphRequestMetadata.h"
+#import "FBSDKHumanSilhouetteIcon.h"
 #import "FBSDKInstrumentManager+Testing.h"
+#import "FBSDKIntegrityManager+Testing.h"
+#import "FBSDKModelManager+IntegrityParametersProcessorProvider.h"
 #import "FBSDKMath.h"
 #import "FBSDKModelManager.h"
 #import "FBSDKModelUtility.h"
 #import "FBSDKPasteboard.h"
 #import "FBSDKSKAdNetworkEvent.h"
 #import "FBSDKSKAdNetworkRule.h"
+#import "FBSDKSKAdNetworkReporter.h"
 #import "FBSDKServerConfigurationFixtures.h"
 #import "FBSDKTestCase.h"
 #import "FBSDKTestCoder.h"
@@ -69,6 +78,7 @@
 #import "SuggestedEventsIndexer+Testing.h"
 #import "UserDefaultsSpy.h"
 #import "WebViewAppLinkResolver+Testing.h"
+#import "FBSDKConversionValueUpdating.h"
 // URLSession Abstraction
 #import "FBSDKURLSessionProxyProviding.h"
 #import "FBSDKURLSessionProxyFactory.h"
@@ -84,7 +94,7 @@
 #import "FBSDKGraphRequestPiggybackManagerProviding.h"
 #import "FBSDKGraphRequestPiggybackManagerProvider.h"
 // AppEvents Abstractions
-#import "FBSDKEventLogger.h"
+#import "FBSDKAppEvents+EventLogging.h"
 // GraphRequest Abstraction
 #import "FBSDKGraphRequestProviding.h"
 #import "FBSDKGraphRequestFactory.h"
@@ -96,9 +106,14 @@
 // AppLinkUtility method
 #import "FBSDKAppLinkUtility+Internal.h"
 // AppEventsConfiguration
+#import "FBSDKAppEventsConfigurationManager.h"
 #import "FBSDKAppEventsConfigurationProtocol.h"
 #import "FBSDKAppEventsConfigurationProviding.h"
 #import "FBSDKAppEventsConfiguration+AppEventsConfigurationProtocol.h"
+// AppEventsStateManager Abstraction
+#import "FBSDKAppEventsState.h"
+#import "FBSDKAppEventsStateManager.h"
+#import "FBSDKAppEventsStatePersisting.h"
 // NotificationCenter
 #import "FBSDKNotificationProtocols.h"
 #import "NSNotificationCenter+Extensions.h"
@@ -112,6 +127,7 @@
 // FeatureManager abstraction
 #import "FBSDKFeatureChecking.h"
 #import "FBSDKFeatureManager.h"
+#import "FBSDKFeatureDisabling.h"
 // AppLinkResolver
 #import "FBSDKAppLinkResolverRequestBuilding.h"
 #import "FBSDKAppLinkResolverRequestBuilder+Protocols.h"
@@ -120,6 +136,15 @@
 #import "FBSDKPaymentObserving.h"
 // TimeSpentData abstraction
 #import "FBSDKTimeSpentRecording.h"
+// Logging
+#import "FBSDKLogging.h"
+#import "FBSDKLogger+Logging.h"
+#import "FBSDKLoggerFactory.h"
+#import "FBSDKLoggingCreating.h"
+// MetadataIndexer abstraction
+#import "FBSDKMetadataIndexing.h"
+// Parameter processors
+#import "FBSDKAppEventsParameterProcessing.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -142,10 +167,13 @@ NS_SWIFT_NAME(asIdentifierManager(shouldUseCachedManager:dynamicFrameworkResolve
 
 @property (class, nonatomic) FBSDKAppEventsConfigurationManager *shared;
 @property (nonatomic, nullable) id<FBSDKDataPersisting> store;
+@property (nullable, nonatomic) id<FBSDKSettings> settings;
+@property (nullable, nonatomic) id<FBSDKGraphRequestProviding> requestFactory;
+@property (nullable, nonatomic) id<FBSDKGraphRequestConnectionProviding> connectionFactory;
+@property (nonatomic) BOOL hasRequeryFinishedForAppStart;
+@property (nullable, nonatomic) NSDate *timestamp;
 
 + (void)_processResponse:(id)response error:(nullable NSError *)error;
-+ (void)configureWithStore:(id<FBSDKDataPersisting>)store
-NS_SWIFT_NAME(configure(store:));
 + (void)reset;
 
 @end
@@ -290,29 +318,11 @@ NS_SWIFT_NAME(configure(store:appEventsConfigurationProvider:infoDictionaryProvi
 
 @end
 
-@interface FBSDKApplicationDelegate (Testing)
-
-@property (nonatomic, assign) id<FBSDKNotificationObserving> notificationObserver;
-@property (nonatomic, nullable) Class<FBSDKAccessTokenProviding, FBSDKAccessTokenSetting> tokenWallet;
-
-+ (void)initializeSDKWithApplicationDelegate:(FBSDKApplicationDelegate *)delegate
-                               launchOptions:(NSDictionary<UIApplicationLaunchOptionsKey, id> *)launchOptions;
-+ (void)resetHasInitializeBeenCalled
-NS_SWIFT_NAME(reset());
-
-- (instancetype)initWithNotificationObserver:(id<FBSDKNotificationObserving>)observer
-                                 tokenWallet:(Class<FBSDKAccessTokenProviding, FBSDKAccessTokenSetting>)tokenWallet
-                                    settings:(Class<FBSDKSettingsLogging>)settings;
-- (void)applicationDidEnterBackground:(NSNotification *)notification;
-- (void)applicationDidBecomeActive:(NSNotification *)notification;
-- (void)applicationWillResignActive:(NSNotification *)notification;
-@end
-
 @interface FBSDKCrashObserver (Testing)
 
 @property (nonatomic, nullable) id<FBSDKSettings> settings;
 
-- (instancetype)initWithFeatureChecker:(id<FBSDKFeatureChecking>)featureChecker
+- (instancetype)initWithFeatureChecker:(id<FBSDKFeatureChecking, FBSDKFeatureDisabling>)featureChecker
                   graphRequestProvider:(id<FBSDKGraphRequestProviding>)requestProvider
                               settings:(id<FBSDKSettings>)settings;
 

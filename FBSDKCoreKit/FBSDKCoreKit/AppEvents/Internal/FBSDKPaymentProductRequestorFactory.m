@@ -18,10 +18,11 @@
 
 #import "FBSDKPaymentProductRequestorFactory.h"
 
+#import "FBSDKAppEvents+EventLogging.h"
 #import "FBSDKAppStoreReceiptProviding.h"
-#import "FBSDKEventLogger.h"
+#import "FBSDKGateKeeperManager.h"
 #import "FBSDKGateKeeperManaging.h"
-#import "FBSDKLogger.h"
+#import "FBSDKLoggerFactory.h"
 #import "FBSDKPaymentProductRequestor.h"
 #import "FBSDKProductRequestFactory.h"
 #import "FBSDKProductsRequestProtocols.h"
@@ -35,7 +36,7 @@
 @property (nonatomic, readonly) id<FBSDKEventLogging> eventLogger;
 @property (nullable, nonatomic) Class<FBSDKGateKeeperManaging> gateKeeperManager;
 @property (nullable, nonatomic) id<FBSDKDataPersisting> store;
-@property (nullable, nonatomic) id<FBSDKLogging> logger;
+@property (nullable, nonatomic) id<FBSDKLoggingCreating> loggerFactory;
 @property (nonatomic, readonly) id<FBSDKProductsRequestCreating> productsRequestFactory;
 @property (nonatomic, readonly) id<FBSDKAppStoreReceiptProviding> appStoreReceiptProvider;
 
@@ -46,10 +47,10 @@
 - (instancetype)init
 {
   return [self initWithSettings:FBSDKSettings.sharedSettings
-                      eventLogger:[FBSDKEventLogger new]
+                      eventLogger:FBSDKAppEvents.singleton
                 gateKeeperManager:FBSDKGateKeeperManager.class
                             store:NSUserDefaults.standardUserDefaults
-                           logger:[FBSDKLogger new]
+                    loggerFactory:[FBSDKLoggerFactory new]
            productsRequestFactory:[FBSDKProductRequestFactory new]
           appStoreReceiptProvider:[NSBundle bundleForClass:self.class]];
 }
@@ -58,7 +59,7 @@
                      eventLogger:(id<FBSDKEventLogging>)eventLogger
                gateKeeperManager:(Class<FBSDKGateKeeperManaging>)gateKeeperManager
                            store:(id<FBSDKDataPersisting>)store
-                          logger:(id<FBSDKLogging>)logger
+                   loggerFactory:(id<FBSDKLoggingCreating>)loggerFactory
           productsRequestFactory:(id<FBSDKProductsRequestCreating>)productsRequestFactory
          appStoreReceiptProvider:(id<FBSDKAppStoreReceiptProviding>)receiptProvider
 {
@@ -67,7 +68,7 @@
     _eventLogger = eventLogger;
     _gateKeeperManager = gateKeeperManager;
     _store = store;
-    _logger = logger;
+    _loggerFactory = loggerFactory;
     _productsRequestFactory = productsRequestFactory;
     _appStoreReceiptProvider = receiptProvider;
   }
@@ -82,7 +83,7 @@
                                                        eventLogger:self.eventLogger
                                                  gateKeeperManager:self.gateKeeperManager
                                                              store:self.store
-                                                            logger:self.logger
+                                                     loggerFactory:self.loggerFactory
                                             productsRequestFactory:self.productsRequestFactory
                                            appStoreReceiptProvider:self.appStoreReceiptProvider];
 }

@@ -27,7 +27,7 @@
 #import "FBSDKDataPersisting.h"
 #import "FBSDKEventLogging.h"
 #import "FBSDKGateKeeperManaging.h"
-#import "FBSDKLogging.h"
+#import "FBSDKLoggingCreating.h"
 #import "FBSDKProductsRequestProtocols.h"
 #import "FBSDKSettingsProtocol.h"
 
@@ -62,7 +62,7 @@ static int const FBSDKMaxParameterValueLength = 100;
 @property (nonatomic, readonly) id<FBSDKEventLogging> eventLogger;
 @property (nonatomic, readonly) Class<FBSDKGateKeeperManaging> gateKeeperManager;
 @property (nonatomic, readonly) id<FBSDKDataPersisting> store;
-@property (nonatomic, readonly) id<FBSDKLogging> logger;
+@property (nonatomic, readonly) id<FBSDKLoggingCreating> loggerFactory;
 @property (nonatomic) NSMutableSet<NSString *> *originalTransactionSet;
 @property (nonatomic) NSSet<NSString *> *eventsWithReceipt;
 @property (nonatomic, readonly) NSDateFormatter *formatter;
@@ -85,7 +85,7 @@ static NSMutableArray *_pendingRequestors;
                         eventLogger:(id<FBSDKEventLogging>)eventLogger
                   gateKeeperManager:(Class<FBSDKGateKeeperManaging>)gateKeeperManager
                               store:(id<FBSDKDataPersisting>)store
-                             logger:(id<FBSDKLogging>)logger
+                      loggerFactory:(id<FBSDKLoggingCreating>)loggerFactory
              productsRequestFactory:(id<FBSDKProductsRequestCreating>)productRequestFactory
             appStoreReceiptProvider:(id<FBSDKAppStoreReceiptProviding>)receiptProvider
 {
@@ -94,13 +94,13 @@ static NSMutableArray *_pendingRequestors;
     _eventLogger = eventLogger;
     _gateKeeperManager = gateKeeperManager;
     _store = store;
-    _logger = logger;
+    _loggerFactory = loggerFactory;
     _productRequestFactory = productRequestFactory;
     _appStoreReceiptProvider = receiptProvider;
     _transaction = transaction;
     _formatter = [NSDateFormatter new];
     _formatter.dateFormat = @"yyyy-MM-dd HH:mm:ssZ";
-    NSString *data = [[NSUserDefaults standardUserDefaults] stringForKey:FBSDKPaymentObserverOriginalTransactionKey];
+    NSString *data = [_store stringForKey:FBSDKPaymentObserverOriginalTransactionKey];
     _eventsWithReceipt = [NSSet setWithArray:@[FBSDKAppEventNamePurchased, FBSDKAppEventNameSubscribe,
                                                FBSDKAppEventNameStartTrial]];
     if (data) {
@@ -242,8 +242,8 @@ static NSMutableArray *_pendingRequestors;
     return;
   }
   [self.originalTransactionSet addObject:transactionID];
-  [[NSUserDefaults standardUserDefaults] setObject:[[self.originalTransactionSet allObjects] componentsJoinedByString:FBSDKPaymentObserverDelimiter]
-                                            forKey:FBSDKPaymentObserverOriginalTransactionKey];
+  [self.store setObject:[[self.originalTransactionSet allObjects] componentsJoinedByString:FBSDKPaymentObserverDelimiter]
+                 forKey:FBSDKPaymentObserverOriginalTransactionKey];
 }
 
 - (void)clearOriginalTransactionID:(NSString *)transactionID
@@ -252,8 +252,8 @@ static NSMutableArray *_pendingRequestors;
     return;
   }
   [self.originalTransactionSet removeObject:transactionID];
-  [[NSUserDefaults standardUserDefaults] setObject:[[self.originalTransactionSet allObjects] componentsJoinedByString:FBSDKPaymentObserverDelimiter]
-                                            forKey:FBSDKPaymentObserverOriginalTransactionKey];
+  [self.store setObject:[[self.originalTransactionSet allObjects] componentsJoinedByString:FBSDKPaymentObserverDelimiter]
+                 forKey:FBSDKPaymentObserverOriginalTransactionKey];
 }
 
 - (BOOL)isStartTrial:(SKPaymentTransaction *)transaction
@@ -294,34 +294,6 @@ static NSMutableArray *_pendingRequestors;
   return NO;
 }
 
-- (BOOL)hasStartTrial:(SKProduct *)product
-{
-#if !TARGET_OS_TV
-#if __IPHONE_OS_VERSION_MAX_ALLOWED > __IPHONE_11_1
-#if __IPHONE_OS_VERSION_MAX_ALLOWED > __IPHONE_11_4
-#if __IPHONE_OS_VERSION_MAX_ALLOWED > __IPHONE_12_1
-  // promotional offer starting from iOS 12.2
-  if (@available(iOS 12.2, *)) {
-    NSArray<SKProductDiscount *> *discounts = product.discounts;
-    for (SKProductDiscount *discount in discounts) {
-      if (discount.paymentMode == SKProductDiscountPaymentModeFreeTrial) {
-        return YES;
-      }
-    }
-  }
-#endif
-#endif
-  // introductory offer starting from iOS 11.2
-  if (@available(iOS 11.2, *)) {
-    if (product.introductoryPrice && (product.introductoryPrice.paymentMode == SKProductDiscountPaymentModeFreeTrial)) {
-      return YES;
-    }
-  }
-#endif
-#endif
-  return NO;
-}
-
 - (NSString *)durationOfSubscriptionPeriod:(id)subcriptionPeriod
 {
 #if !TARGET_OS_TV
@@ -349,8 +321,8 @@ static NSMutableArray *_pendingRequestors;
   NSArray *products = response.products;
   NSArray *invalidProductIdentifiers = response.invalidProductIdentifiers;
   if (products.count + invalidProductIdentifiers.count != 1) {
-    [self.logger singleShotLogEntry:FBSDKLoggingBehaviorAppEvents
-                       formatString:@"FBSDKPaymentObserver: Expect to resolve one product per request"];
+    id<FBSDKLogging> logger = [self.loggerFactory createLoggerWithLoggingBehavior:FBSDKLoggingBehaviorAppEvents];
+    [logger logEntry:@"FBSDKPaymentObserver: Expect to resolve one product per request"];
   }
   SKProduct *product = nil;
   if (products.count) {
@@ -391,7 +363,7 @@ static NSMutableArray *_pendingRequestors;
         eventName = FBSDKAppEventNameStartTrial;
         [self clearOriginalTransactionID:originalTransactionID];
       } else {
-        if (originalTransactionID && [_originalTransactionSet containsObject:originalTransactionID]) {
+        if (originalTransactionID && [self.originalTransactionSet containsObject:originalTransactionID]) {
           return;
         }
         eventName = FBSDKAppEventNameSubscribe;

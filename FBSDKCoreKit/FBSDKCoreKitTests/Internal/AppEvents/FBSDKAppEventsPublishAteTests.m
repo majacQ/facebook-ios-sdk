@@ -23,7 +23,6 @@
 
 #import "FBSDKAppEventsAtePublisher.h"
 #import "FBSDKCoreKitTests-Swift.h"
-#import "FBSDKTestCase.h"
 #import "UserDefaultsSpy.h"
 
 // TODO: move to swift
@@ -58,7 +57,7 @@
 + (void)setSettings:(id<FBSDKSettings>)settings;
 @end
 
-@interface FBSDKAppEventsPublishAteTests : FBSDKTestCase
+@interface FBSDKAppEventsPublishAteTests : XCTestCase
 @property (nonatomic, strong) id<FBSDKSettings> settings;
 @end
 
@@ -68,7 +67,6 @@
 {
   [super setUp];
 
-  [self stubAllocatingGraphRequestConnection];
   _settings = [TestSettings new];
   [FBSDKAppEvents setSettings:_settings];
 }
@@ -99,7 +97,7 @@
   [appEvents publishATE];
 }
 
-- (void)testPublishingAteUsesPublisherOnlyOnce
+- (void)testPublishingAteAgainAfterSettingAppID
 {
   FakeAtePublisher *publisher = [FakeAtePublisher new];
   FBSDKAppEvents *appEvents = [[FBSDKAppEvents alloc] initWithFlushBehavior:FBSDKAppEventsFlushBehaviorExplicitOnly
@@ -107,17 +105,11 @@
                                                                      userID:@"1"
                                                                atePublisher:publisher];
   [appEvents publishATE];
+  XCTAssertFalse(publisher.publishAteWasCalled, "App events Should not invoke the ATE publisher when there is not App ID");
 
-  XCTAssertTrue(publisher.publishAteWasCalled, "App events should use the provided ATE publisher");
-
-  // Reset the spy
-  publisher.publishAteWasCalled = NO;
-
+  _settings.appID = self.name;
   [appEvents publishATE];
-  XCTAssertFalse(
-    publisher.publishAteWasCalled,
-    "Should not invoke the ate publisher more than once"
-  );
+  XCTAssertTrue(publisher.publishAteWasCalled, "App events should use the provided ATE publisher");
 }
 
 @end

@@ -25,6 +25,8 @@
 #else
  #import "FBSDKCoreKit+Internal.h"
 #endif
+
+#import "FBSDKCoreKitBasicsImportForShareKit.h"
 #import "FBSDKShareConstants.h"
 #import "FBSDKShareLinkContent.h"
 
@@ -165,8 +167,9 @@
   if (hashtag.isValid) {
     return hashtag.stringRepresentation;
   } else {
+    NSString *msg = [NSString stringWithFormat:@"Invalid hashtag: '%@'", hashtag.stringRepresentation];
     [FBSDKLogger singleShotLogEntry:FBSDKLoggingBehaviorDeveloperErrors
-                       formatString:@"Invalid hashtag: '%@'", hashtag.stringRepresentation];
+                           logEntry:msg];
     return nil;
   }
 }
@@ -346,7 +349,7 @@
       FBSDKGraphRequest *request = [[FBSDKGraphRequest alloc] initWithGraphPath:@"me/staging_resources"
                                                                      parameters:stagingParameters
                                                                      HTTPMethod:@"POST"];
-      [request startWithCompletionHandler:^(FBSDKGraphRequestConnection *connection, id result, NSError *error) {
+      [request startWithCompletion:^(id<FBSDKGraphRequestConnecting> connection, id result, NSError *error) {
         NSString *photoStagedURI = result[@"uri"];
         if (photoStagedURI != nil) {
           [FBSDKTypeUtility array:stagedURIs addObject:photoStagedURI];
