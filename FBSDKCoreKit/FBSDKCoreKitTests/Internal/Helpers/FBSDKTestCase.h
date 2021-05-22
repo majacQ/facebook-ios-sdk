@@ -164,12 +164,6 @@ Also, to get a better understanding of mocking, please read the documentation at
 /// Stubs `FBSDKProfile.fetchCachedProfile`
 - (void)stubCachedProfileWith:(FBSDKProfile *__nullable)profile;
 
-/// Stubs `FBSDKSettings.graphAPIVersion` with the provided version string
-- (void)stubGraphAPIVersionWith:(NSString *)version;
-
-/// Stubs `FBSDKSettings.clientToken` with the provided token string
-- (void)stubClientTokenWith:(nullable NSString *)token;
-
 /// Stubs `FBSDKSettings.getAdvertisingTrackingStatus` with the provided value
 - (void)stubAdvertisingTrackingStatusWith:(FBSDKAdvertisingTrackingStatus)trackingStatus;
 
@@ -214,12 +208,6 @@ Also, to get a better understanding of mocking, please read the documentation at
 /// - completionSuccess: The value to pass for the success parameter of the completion handler
 - (void)stubOpenUrlOptionsCompletionHandlerWithPerformCompletion:(BOOL)performCompletion
                                                completionSuccess:(BOOL)completionSuccess;
-
-/// Stubs `FBSDKSettings.appURLSchemeSuffix` and return the provided value
-- (void)stubAppUrlSchemeSuffixWith:(nullable NSString *)suffix;
-
-/// Stubs `FBSDKSettings.userAgentSuffix` and returns the provided value
-- (void)stubUserAgentSuffixWith:(nullable NSString *)suffix;
 
 /// Stubs `FBSDKInternalUtility`'s `appURLScheme` property to return the provided scheme
 - (void)stubAppUrlSchemeWith:(nullable NSString *)scheme;

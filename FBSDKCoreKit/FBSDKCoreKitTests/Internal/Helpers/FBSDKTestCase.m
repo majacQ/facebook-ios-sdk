@@ -387,16 +387,6 @@ typedef void (^FBSDKSKAdNetworkReporterBlock)(void);
   OCMStub(ClassMethod([_profileClassMock fetchCachedProfile])).andReturn(profile);
 }
 
-- (void)stubGraphAPIVersionWith:(NSString *)version
-{
-  OCMStub(ClassMethod([_settingsClassMock graphAPIVersion])).andReturn(version);
-}
-
-- (void)stubClientTokenWith:(nullable NSString *)token
-{
-  OCMStub(ClassMethod([_settingsClassMock clientToken])).andReturn(token);
-}
-
 - (void)stubAppEventsUtilityShouldDropAppEventWith:(BOOL)shouldDropEvent
 {
   OCMStub(ClassMethod([_appEventsUtilityClassMock shouldDropAppEvent])).andReturn(shouldDropEvent);
@@ -471,16 +461,6 @@ typedef void (^FBSDKSKAdNetworkReporterBlock)(void);
   } else {
     OCMStub([_sharedApplicationMock openURL:OCMArg.any options:OCMArg.any completionHandler:OCMArg.any]);
   }
-}
-
-- (void)stubAppUrlSchemeSuffixWith:(NSString *)suffix
-{
-  OCMStub(ClassMethod([_settingsClassMock appURLSchemeSuffix])).andReturn(suffix);
-}
-
-- (void)stubUserAgentSuffixWith:(nullable NSString *)suffix
-{
-  OCMStub(ClassMethod([self.settingsClassMock userAgentSuffix])).andReturn(suffix);
 }
 
 - (void)stubAppUrlSchemeWith:(nullable NSString *)scheme
